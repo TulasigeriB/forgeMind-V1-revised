@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { api, clearToken, getToken, saveToken } from './api'
-import type { AuthUser, Customer, CustomerInput } from './api'
+import type { AuthUser, Customer, CustomerInput, RFQ, RFQInput, RFQStatus } from './api'
 
 type Section = 'Overview' | 'Customers' | 'RFQs' | 'Projects' | 'Engineering' | 'Process planning' | 'Cost estimates' | 'Quotations' | 'Production feedback' | 'Settings'
 type AuthMode = 'login' | 'register'
@@ -32,6 +32,9 @@ const descriptions: Record<Section, string> = {
   Settings: 'Configure company details, currencies, roles, and manufacturing parameters.',
 }
 
+const rfqStatuses: RFQStatus[] = ['Draft', 'Received', 'Quoting', 'Submitted', 'Won', 'Lost', 'Cancelled']
+const emptyRFQ: RFQInput = { customer_id: '', reference: '', title: '', description: '', quantity: 1, due_date: null, status: 'Received', notes: '' }
+
 const emptyCustomer: CustomerInput = {
   name: '', contact_name: '', email: '', phone: '', address: '', notes: '',
 }
@@ -50,6 +53,14 @@ function App() {
   const [formOpen, setFormOpen] = useState(false)
   const [savingCustomer, setSavingCustomer] = useState(false)
   const [customerNotice, setCustomerNotice] = useState('')
+  const [rfqRows, setRfqRows] = useState<RFQ[]>([])
+  const [rfqBusy, setRfqBusy] = useState(false)
+  const [rfqError, setRfqError] = useState('')
+  const [rfqNotice, setRfqNotice] = useState('')
+  const [rfqFormOpen, setRfqFormOpen] = useState(false)
+  const [editingRFQ, setEditingRFQ] = useState<RFQ | null>(null)
+  const [rfqForm, setRfqForm] = useState<RFQInput>(emptyRFQ)
+  const [savingRFQ, setSavingRFQ] = useState(false)
   const groups = [...new Set(sections.map((section) => section.group))]
 
   useEffect(() => {
@@ -70,6 +81,7 @@ function App() {
 
   useEffect(() => {
     if (user && active === 'Customers') void loadCustomers()
+    if (user && active === 'RFQs') { void loadCustomers(); void loadRFQs() }
   }, [user, active])
 
   async function loadCustomers() {
@@ -82,6 +94,30 @@ function App() {
     } finally {
       setCustomersBusy(false)
     }
+  }
+
+  async function loadRFQs() {
+    setRfqBusy(true); setRfqError('')
+    try { setRfqRows(await api.rfqs()) }
+    catch (error) { setRfqError(error instanceof Error ? error.message : 'Could not load RFQs.') }
+    finally { setRfqBusy(false) }
+  }
+
+  function openCreateRFQ() { setEditingRFQ(null); setRfqForm({ ...emptyRFQ, customer_id: customerRows[0]?.id || '' }); setRfqNotice(''); setRfqError(''); setRfqFormOpen(true) }
+  function openEditRFQ(rfq: RFQ) {
+    setEditingRFQ(rfq); setRfqForm({ customer_id: rfq.customer_id, reference: rfq.reference, title: rfq.title, description: rfq.description || '', quantity: rfq.quantity, due_date: rfq.due_date, status: rfq.status, notes: rfq.notes || '' }); setRfqNotice(''); setRfqError(''); setRfqFormOpen(true)
+  }
+  async function saveRFQ(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setSavingRFQ(true); setRfqError(''); setRfqNotice('')
+    const payload: RFQInput = { ...rfqForm, reference: rfqForm.reference.trim(), title: rfqForm.title.trim(), quantity: Number(rfqForm.quantity), description: rfqForm.description?.trim() || null, due_date: rfqForm.due_date || null, notes: rfqForm.notes?.trim() || null }
+    try { if (editingRFQ) await api.updateRFQ(editingRFQ.id, payload); else await api.createRFQ(payload); setRfqFormOpen(false); setRfqNotice(editingRFQ ? 'RFQ updated.' : 'RFQ created.'); await loadRFQs() }
+    catch (error) { setRfqError(error instanceof Error ? error.message : 'Could not save RFQ.') }
+    finally { setSavingRFQ(false) }
+  }
+  async function deleteRFQ(rfq: RFQ) {
+    if (!window.confirm(`Delete ${rfq.reference}? This cannot be undone.`)) return
+    try { await api.deleteRFQ(rfq.id); setRfqNotice('RFQ deleted.'); setRfqError(''); await loadRFQs() }
+    catch (error) { setRfqError(error instanceof Error ? error.message : 'Could not delete RFQ.') }
   }
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
@@ -234,7 +270,25 @@ function App() {
         </header>
         <div className="page-content">
           <div className="page-heading"><div><p className="eyebrow">MANUFACTURING WORKSPACE</p><h1>{active === 'Overview' ? 'Good work starts with clarity.' : active}</h1><p className="page-description">{descriptions[active]}</p></div><div className="date-chip"><span className="date-chip-dot" /> Connected workspace</div></div>
-          {active === 'Customers' ? (
+          {active === 'RFQs' ? (
+            <section className="customer-panel">
+              <div className="customer-toolbar"><div><h2>Request for quotation</h2><p>Track customer enquiries from receipt through quotation and outcome.</p></div><button className="primary-button" onClick={openCreateRFQ} disabled={customerRows.length === 0}>+ New RFQ</button></div>
+              {rfqError && <div className="error-banner" role="alert">{rfqError}</div>}{rfqNotice && <div className="success-banner" role="status">{rfqNotice}</div>}
+              {customerRows.length === 0 && !rfqBusy && <div className="empty-state"><h2>Add a customer first</h2><p>RFQs must be linked to a customer record.</p><button className="secondary-button" onClick={() => setActive('Customers')}>Open customers</button></div>}
+              {rfqFormOpen && <form className="customer-form" onSubmit={saveRFQ}><div className="customer-form-heading"><h3>{editingRFQ ? 'Edit RFQ' : 'New RFQ'}</h3><button type="button" className="text-button" onClick={() => setRfqFormOpen(false)}>Cancel</button></div>
+                <div className="form-grid">
+                  <label>Customer *<select required value={rfqForm.customer_id} onChange={e => setRfqForm({ ...rfqForm, customer_id: e.target.value })}><option value="">Select customer</option>{customerRows.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+                  <label>RFQ reference *<input required minLength={2} maxLength={80} value={rfqForm.reference} onChange={e => setRfqForm({ ...rfqForm, reference: e.target.value })} placeholder="RFQ-2026-001" /></label>
+                  <label className="wide-field">Title / part description *<input required minLength={2} maxLength={200} value={rfqForm.title} onChange={e => setRfqForm({ ...rfqForm, title: e.target.value })} placeholder="CNC machined aluminium housing" /></label>
+                  <label>Quantity *<input required type="number" min="0.001" step="any" value={rfqForm.quantity} onChange={e => setRfqForm({ ...rfqForm, quantity: Number(e.target.value) })} /></label>
+                  <label>Due date<input type="date" value={rfqForm.due_date || ''} onChange={e => setRfqForm({ ...rfqForm, due_date: e.target.value || null })} /></label>
+                  <label>Status<select value={rfqForm.status} onChange={e => setRfqForm({ ...rfqForm, status: e.target.value as RFQStatus })}>{rfqStatuses.map(status => <option key={status}>{status}</option>)}</select></label>
+                  <label className="wide-field">Requirements / description<textarea rows={3} maxLength={10000} value={rfqForm.description || ''} onChange={e => setRfqForm({ ...rfqForm, description: e.target.value })} /></label>
+                  <label className="wide-field">Internal notes<textarea rows={2} maxLength={10000} value={rfqForm.notes || ''} onChange={e => setRfqForm({ ...rfqForm, notes: e.target.value })} /></label>
+                </div><div className="form-actions"><button className="primary-button" type="submit" disabled={savingRFQ}>{savingRFQ ? 'Saving…' : editingRFQ ? 'Save changes' : 'Create RFQ'}</button></div></form>}
+              {rfqBusy ? <div className="empty-state">Loading RFQs…</div> : rfqRows.length === 0 ? (customerRows.length > 0 && <div className="empty-state"><div className="empty-state-icon">↗</div><h2>No RFQs yet</h2><p>Create an RFQ to begin tracking a customer enquiry.</p><button className="secondary-button" onClick={openCreateRFQ}>Create first RFQ</button></div>) : <div className="table-wrap"><table className="data-table"><thead><tr><th>Reference / requirement</th><th>Customer</th><th>Quantity</th><th>Due date</th><th>Status</th><th>Actions</th></tr></thead><tbody>{rfqRows.map(rfq => <tr key={rfq.id}><td><strong>{rfq.reference}</strong><small>{rfq.title}</small></td><td>{rfq.customer_name}</td><td>{rfq.quantity.toLocaleString()}</td><td>{rfq.due_date || '—'}</td><td><span className={`rfq-status status-${rfq.status.toLowerCase()}`}>{rfq.status}</span></td><td><div className="row-actions"><button className="text-button" onClick={() => openEditRFQ(rfq)}>Edit</button><button className="text-button danger-text" onClick={() => void deleteRFQ(rfq)}>Delete</button></div></td></tr>)}</tbody></table></div>}
+            </section>
+          ) : active === 'Customers' ? (
             <section className="customer-panel">
               <div className="customer-toolbar"><div><h2>Customers</h2><p>Customer records are stored in your organization’s database.</p></div><button className="primary-button" onClick={openCreateCustomer}>+ New customer</button></div>
               {customerError && <div className="error-banner" role="alert">{customerError}</div>}

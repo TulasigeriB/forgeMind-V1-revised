@@ -1,53 +1,66 @@
 # Project Status
 
-**As of:** 2026-10-14  
-**Phase:** Milestone 0 — planning  
-**Implementation status:** Not started; this package is documentation only.
+**As of:** 2026-10-16  
+**Current milestone:** Milestone 2 — Authentication and customer workflow  
+**Git commits:** None created.
 
-## Verified completed
+## Verified by the user
 
-- Reviewed the supplied ForgeMind greenfield specification.
-- Defined a proposed MVP boundary and milestone gates in this planning pack.
-- Drafted initial architecture, data model, engineering-analysis, costing, security, and testing plans.
+- Milestone 1 backend tests passed (4 tests).
+- Milestone 1 frontend tests passed (2 tests).
+- Frontend production build succeeded.
+- PostgreSQL migrations `0001_foundation` and `0002_customers` applied; `alembic current` reported `0002_customers (head)`.
+- `alembic check` reported no new upgrade operations.
+- `/ready` returned `{"status":"ready","database":"ok"}`.
+- After adding the first backend business slice, the user reported 8 backend tests passed on Windows/PostgreSQL.
 
-## Not implemented
+## Implemented in the current source package (new frontend slice; local verification pending)
 
-- No application repository/code has been created by this artifact.
-- No dependencies installed or compatibility tests run.
-- No database or migrations created/applied.
-- No API, UI, file storage, CAD/drawing processing, costing engine, or quotation generation implemented.
-- No automated tests run.
+- Login and organization registration UI.
+- Session-scoped bearer token storage.
+- API client with typed auth/customer interfaces and readable API errors.
+- Authenticated current-user bootstrap and logout.
+- Customer list, create, edit, delete, loading, error, and empty states.
+- Default CORS origins include both `localhost:5173` and `127.0.0.1:5173`.
+- Frontend tests cover auth mode, login/customer listing, and customer creation.
+- `frontend/.env.example` documents `VITE_API_BASE_URL`.
 
-## Confirmed planning decisions
+## Backend implementation already present
 
-- MVP scope: expanded first release; include the connected RFQ-to-quotation workflow, initial PDF drawing extraction/review, configurable rule-based process planning, and production-feedback data capture. Advanced CAM/NC generation remains excluded.
-- Initial deployment: local development first.
-- Authentication: application-managed authentication and roles, subject to security review before sensitive endpoints are exposed.
-- Costing: multi-currency support is required in the design and MVP; exchange-rate behavior and commercial currency rules remain open.
-- Greenfield implementation and modular monolith remain the baseline.
+- PBKDF2-HMAC-SHA256 password hashing.
+- HMAC-signed one-hour bearer tokens.
+- Organization registration, login, and `/auth/me`.
+- Organization-scoped customer CRUD and audit events.
+- Customer migration `0002_customers`.
+- Organization-scoped RFQ CRUD, customer linkage, status workflow, and audit events.
+- RFQ migration `0003_rfqs`; backend RFQ isolation/CRUD test added.
 
-## Remaining open decisions before/during implementation
+## Remaining work
 
-1. Supported development OS and exact Python/Node/PostgreSQL versions.
-2. CAD kernel binding selection after a compatibility, STEP-fixture, packaging, and licensing spike.
-3. Frontend component/styling system and frontend unit-test runner.
-4. Company tenancy model and exact role/permission matrix.
-5. Maximum upload sizes, retention/deletion policy, and local-storage interface details.
-6. Supported currencies, quote currency versus cost-base currency, exchange-rate source/update policy, manual overrides, and whether historical rates are snapshotted per estimate.
-7. Tax jurisdictions and whether tax is configured per customer/project/quote; tax-inclusive versus tax-exclusive display.
-8. Currency precision, rounding mode, rounding stage, and margin/markup order of operations.
-9. Minimum viable PDF fixture set and objective extraction evaluation thresholds.
-10. Which process-planning rules and feedback fields are mandatory in the first expanded release.
+- Run updated frontend tests and production build on the user's machine.
+- Run backend tests after merging/replacing with this source package.
+- Verify actual browser-to-API CORS requests.
+- Restrict open organization registration before any public deployment.
+- Add rate limiting, password recovery, email verification, token revocation, and production secret management before production use.
+- Implement project management and connect RFQs to downstream engineering, costing, and quotations.
+- Secure engineering file storage and upload handling remains later work.
 
-## Immediate next step
+## Local run
 
-Present this finalized Phase 0 plan for explicit user approval. Do not begin Milestone 1 until approval is given. Do not represent any planned feature as implemented.
+Backend from `backend/`:
 
-## User-selected configuration
+```powershell
+python -m pytest -q
+alembic upgrade head
+uvicorn app.main:app --reload
+```
 
-- Scope: expanded MVP.
-- Deployment: local development first.
-- Authentication: built-in/application-managed.
-- Costing: multi-currency.
+Frontend from `frontend/`:
 
-**Approval status:** Awaiting explicit approval of the finalized Phase 0 plan. Milestone 1 has not started.
+```powershell
+npm test
+npm run build
+npm run dev
+```
+
+Configure `VITE_API_BASE_URL` if the API is not at `http://127.0.0.1:8000`.

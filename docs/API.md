@@ -1,31 +1,44 @@
-# API Outline (Phase 0)
+# API
 
-Exact schemas and routes will be specified as each vertical slice is implemented. Proposed REST API prefix: `/api/v1`.
+Local base URL: `http://127.0.0.1:8000`. Interactive docs: `/docs`.
 
-## Initial resource groups
+## Health
 
-- `GET /health` and `GET /ready` — process health versus dependency readiness.
-- `/customers` — list, create, retrieve, update, deactivate.
-- `/rfqs` — list, create, retrieve, update status.
-- `/projects` — list, create, retrieve, update lifecycle.
-- `/projects/{project_id}/parts` — part management.
-- `/projects/{project_id}/files` — upload/list file metadata.
-- `/files/{file_id}/versions/{version}` — authorized metadata/download endpoint.
-- `/files/{file_id}/analysis-runs` — create/list analysis runs.
-- `/analysis-runs/{run_id}` — status/result/warnings.
-- `/analysis-runs/{run_id}/review` — review/corrections/approval.
-- `/process-plans`, `/cost-estimates`, `/quotations`, `/production-feedback` — added in later milestones.
-
-## Contract rules
-
-- Pydantic request/response schemas; never serialize ORM models indiscriminately.
-- Consistent error envelope with stable machine-readable `code`, safe `message`, optional field errors, and request/correlation ID.
-- Validate IDs, units, quantities, lifecycle transitions, file type/size, and authorization on the server.
-- Pagination and stable ordering for list endpoints.
-- Return `202 Accepted` only when work is actually queued; do not claim background processing when execution is synchronous.
-- Downloads require authorization and should not expose permanent public storage URLs.
-- Idempotency protection for expensive or duplicate analysis requests should be added with the analysis lifecycle.
+- `GET /health`: liveness.
+- `GET /ready`: dependency readiness.
 
 ## Authentication
 
-Authentication provider and session/token strategy remain an approval-time decision. No sensitive endpoint should be exposed before authentication and project-level authorization are implemented and tested.
+- `POST /auth/register`: create organization and initial owner. Password 12–128 chars; default currency is a three-letter uppercase code. Open registration is local-development only.
+- `POST /auth/login`: email/password login; returns a one-hour bearer token.
+- `GET /auth/me`: current profile, requires bearer token.
+
+Frontend token is stored in `sessionStorage`, cleared on logout and on authenticated 401 responses. Do not expose this development app publicly; token storage is not a substitute for production identity/security controls.
+
+## Customers
+
+All customer endpoints require a bearer token and constrain access to the authenticated user's organization.
+
+- `GET /customers?limit=50&offset=0`
+- `POST /customers`
+- `GET /customers/{customer_id}`
+- `PATCH /customers/{customer_id}`
+- `DELETE /customers/{customer_id}`
+
+Customer fields: `name` (required), `contact_name`, `email`, `phone`, `address`, and `notes`. Customer names are unique per organization. Duplicate names return 409. Cross-organization records return 404.
+
+## Frontend
+
+Set `VITE_API_BASE_URL` in `frontend/.env.local` if needed. Default is `http://127.0.0.1:8000`. The API's default CORS origins include Vite on both localhost and loopback.
+
+## RFQ management
+
+All RFQ endpoints require a bearer token and are scoped to the authenticated organization. Each RFQ must reference a customer belonging to that same organization.
+
+- `GET /rfqs?status=Received&limit=100&offset=0` — list RFQs, optionally filtered by status.
+- `POST /rfqs` — create an RFQ.
+- `GET /rfqs/{rfq_id}` — retrieve one RFQ.
+- `PATCH /rfqs/{rfq_id}` — update an RFQ.
+- `DELETE /rfqs/{rfq_id}` — delete an RFQ.
+
+Fields: `customer_id`, `reference`, `title`, `quantity` are required; `description`, `due_date`, `status`, and `notes` are optional. Status values: `Draft`, `Received`, `Quoting`, `Submitted`, `Won`, `Lost`, `Cancelled`. Reference numbers are unique per organization. Migration `0003_rfqs` adds RFQ persistence. Customers linked to RFQs cannot be deleted until their RFQs are removed.
