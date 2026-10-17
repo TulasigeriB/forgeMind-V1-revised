@@ -35,8 +35,11 @@ export type RFQ = {
 }
 export type RFQInput = Omit<RFQ, 'id' | 'organization_id' | 'customer_name' | 'created_at' | 'updated_at'>
 
-// Type the Vite environment explicitly so this file also builds when the project's
-// TypeScript configuration does not automatically include vite/client declarations.
+export type QuoteStatus = 'Draft' | 'Under Review' | 'Submitted' | 'Accepted' | 'Rejected' | 'Expired'
+export type QuoteLineItem = { description: string; quantity: number; unit: string; material_unit_cost: number; labor_unit_cost: number; overhead_unit_cost: number; unit_selling_price: number }
+export type Quotation = { id: string; organization_id: string; rfq_id: string; rfq_reference: string; customer_name: string; reference: string; revision: number; currency: 'INR' | 'USD' | 'EUR' | 'GBP'; status: QuoteStatus; valid_until: string | null; line_items: QuoteLineItem[]; material_cost: number; labor_cost: number; overhead_cost: number; total_cost: number; selling_price: number; gross_margin_percent: number; notes: string | null; created_at: string; updated_at: string }
+export type QuotationInput = Omit<Quotation, 'id' | 'organization_id' | 'rfq_reference' | 'customer_name' | 'material_cost' | 'labor_cost' | 'overhead_cost' | 'total_cost' | 'selling_price' | 'gross_margin_percent' | 'created_at' | 'updated_at'>
+
 const viteEnv = (import.meta as ImportMeta & { env?: { VITE_API_BASE_URL?: string } }).env
 const API_BASE = (viteEnv?.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
 const TOKEN_KEY = 'forgemind_access_token'
@@ -102,4 +105,8 @@ export const api = {
   createRFQ: (input: RFQInput) => request<RFQ>('/rfqs', { method: 'POST', body: JSON.stringify(input) }),
   updateRFQ: (id: string, input: RFQInput) => request<RFQ>(`/rfqs/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(input) }),
   deleteRFQ: (id: string) => request<void>(`/rfqs/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  quotations: () => request<Quotation[]>('/quotations'),
+  createQuotation: (input: QuotationInput) => request<Quotation>('/quotations', { method: 'POST', body: JSON.stringify(input) }),
+  updateQuotation: (id: string, input: QuotationInput) => request<Quotation>(`/quotations/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  deleteQuotation: (id: string) => request<void>(`/quotations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 }

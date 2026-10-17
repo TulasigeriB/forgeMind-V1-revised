@@ -6,6 +6,7 @@ from app.api.auth import router as auth_router
 from app.api.customers import router as customers_router
 from app.api.health import router as health_router
 from app.api.rfqs import router as rfqs_router
+from app.api.quotations import router as quotations_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 
@@ -38,3 +39,4 @@ app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(customers_router)
 app.include_router(rfqs_router)
+app.include_router(quotations_router)

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { api, clearToken, getToken, saveToken } from './api'
-import type { AuthUser, Customer, CustomerInput, RFQ, RFQInput, RFQStatus } from './api'
+import type { AuthUser, Customer, CustomerInput, RFQ, RFQInput, RFQStatus, Quotation, QuotationInput, QuoteStatus } from './api'
 
 type Section = 'Overview' | 'Customers' | 'RFQs' | 'Projects' | 'Engineering' | 'Process planning' | 'Cost estimates' | 'Quotations' | 'Production feedback' | 'Settings'
 type AuthMode = 'login' | 'register'
@@ -33,6 +33,8 @@ const descriptions: Record<Section, string> = {
 }
 
 const rfqStatuses: RFQStatus[] = ['Draft', 'Received', 'Quoting', 'Submitted', 'Won', 'Lost', 'Cancelled']
+const quoteStatuses: QuoteStatus[] = ['Draft', 'Under Review', 'Submitted', 'Accepted', 'Rejected', 'Expired']
+const emptyQuoteItem = { description: '', quantity: 1, unit: 'pcs', material_unit_cost: 0, labor_unit_cost: 0, overhead_unit_cost: 0, unit_selling_price: 0 }
 const emptyRFQ: RFQInput = { customer_id: '', reference: '', title: '', description: '', quantity: 1, due_date: null, status: 'Received', notes: '' }
 
 const emptyCustomer: CustomerInput = {
@@ -61,6 +63,13 @@ function App() {
   const [editingRFQ, setEditingRFQ] = useState<RFQ | null>(null)
   const [rfqForm, setRfqForm] = useState<RFQInput>(emptyRFQ)
   const [savingRFQ, setSavingRFQ] = useState(false)
+  const [quoteRows, setQuoteRows] = useState<Quotation[]>([])
+  const [quoteError, setQuoteError] = useState('')
+  const [quoteNotice, setQuoteNotice] = useState('')
+  const [quoteFormOpen, setQuoteFormOpen] = useState(false)
+  const [editingQuote, setEditingQuote] = useState<Quotation | null>(null)
+  const [quoteForm, setQuoteForm] = useState<QuotationInput>({ rfq_id: '', reference: '', revision: 1, currency: 'INR', status: 'Draft', valid_until: null, line_items: [{ ...emptyQuoteItem }], notes: '' })
+  const [quoteBusy, setQuoteBusy] = useState(false)
   const groups = [...new Set(sections.map((section) => section.group))]
 
   useEffect(() => {
@@ -82,6 +91,7 @@ function App() {
   useEffect(() => {
     if (user && active === 'Customers') void loadCustomers()
     if (user && active === 'RFQs') { void loadCustomers(); void loadRFQs() }
+    if (user && active === 'Quotations') { void loadRFQs(); void loadQuotations() }
   }, [user, active])
 
   async function loadCustomers() {
@@ -94,6 +104,29 @@ function App() {
     } finally {
       setCustomersBusy(false)
     }
+  }
+
+  async function loadQuotations() {
+    setQuoteBusy(true); setQuoteError('')
+    try { setQuoteRows(await api.quotations()) }
+    catch (error) { setQuoteError(error instanceof Error ? error.message : 'Could not load quotations.') }
+    finally { setQuoteBusy(false) }
+  }
+  function openCreateQuote() {
+    setEditingQuote(null); setQuoteForm({ rfq_id: rfqRows[0]?.id || '', reference: '', revision: 1, currency: 'INR', status: 'Draft', valid_until: null, line_items: [{ ...emptyQuoteItem }], notes: '' }); setQuoteError(''); setQuoteNotice(''); setQuoteFormOpen(true)
+  }
+  function openEditQuote(q: Quotation) {
+    setEditingQuote(q); setQuoteForm({ rfq_id: q.rfq_id, reference: q.reference, revision: q.revision, currency: q.currency, status: q.status, valid_until: q.valid_until, line_items: q.line_items, notes: q.notes || '' }); setQuoteError(''); setQuoteNotice(''); setQuoteFormOpen(true)
+  }
+  async function saveQuote(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setQuoteError(''); setQuoteNotice('')
+    try { if (editingQuote) await api.updateQuotation(editingQuote.id, quoteForm); else await api.createQuotation(quoteForm); setQuoteFormOpen(false); setQuoteNotice(editingQuote ? 'Quotation updated.' : 'Quotation created.'); await loadQuotations() }
+    catch (error) { setQuoteError(error instanceof Error ? error.message : 'Could not save quotation.') }
+  }
+  async function deleteQuote(q: Quotation) {
+    if (!window.confirm(`Delete quotation ${q.reference} revision ${q.revision}?`)) return
+    try { await api.deleteQuotation(q.id); setQuoteNotice('Quotation deleted.'); await loadQuotations() }
+    catch (error) { setQuoteError(error instanceof Error ? error.message : 'Could not delete quotation.') }
   }
 
   async function loadRFQs() {
@@ -287,6 +320,29 @@ function App() {
                   <label className="wide-field">Internal notes<textarea rows={2} maxLength={10000} value={rfqForm.notes || ''} onChange={e => setRfqForm({ ...rfqForm, notes: e.target.value })} /></label>
                 </div><div className="form-actions"><button className="primary-button" type="submit" disabled={savingRFQ}>{savingRFQ ? 'Saving…' : editingRFQ ? 'Save changes' : 'Create RFQ'}</button></div></form>}
               {rfqBusy ? <div className="empty-state">Loading RFQs…</div> : rfqRows.length === 0 ? (customerRows.length > 0 && <div className="empty-state"><div className="empty-state-icon">↗</div><h2>No RFQs yet</h2><p>Create an RFQ to begin tracking a customer enquiry.</p><button className="secondary-button" onClick={openCreateRFQ}>Create first RFQ</button></div>) : <div className="table-wrap"><table className="data-table"><thead><tr><th>Reference / requirement</th><th>Customer</th><th>Quantity</th><th>Due date</th><th>Status</th><th>Actions</th></tr></thead><tbody>{rfqRows.map(rfq => <tr key={rfq.id}><td><strong>{rfq.reference}</strong><small>{rfq.title}</small></td><td>{rfq.customer_name}</td><td>{rfq.quantity.toLocaleString()}</td><td>{rfq.due_date || '—'}</td><td><span className={`rfq-status status-${rfq.status.toLowerCase()}`}>{rfq.status}</span></td><td><div className="row-actions"><button className="text-button" onClick={() => openEditRFQ(rfq)}>Edit</button><button className="text-button danger-text" onClick={() => void deleteRFQ(rfq)}>Delete</button></div></td></tr>)}</tbody></table></div>}
+            </section>
+          ) : active === 'Quotations' ? (
+            <section className="customer-panel">
+              <div className="customer-toolbar"><div><h2>Quotations & costing</h2><p>Build revisioned quotes from RFQs. Costs and margin are calculated by the API.</p></div><button className="primary-button" onClick={openCreateQuote} disabled={rfqRows.length === 0}>+ New quotation</button></div>
+              {quoteError && <div className="error-banner" role="alert">{quoteError}</div>}{quoteNotice && <div className="success-banner" role="status">{quoteNotice}</div>}
+              {rfqRows.length === 0 && <div className="empty-state"><h2>Create an RFQ first</h2><p>Every quotation must be linked to an existing RFQ.</p><button className="secondary-button" onClick={() => setActive('RFQs')}>Open RFQs</button></div>}
+              {quoteFormOpen && <form className="customer-form" onSubmit={saveQuote}><div className="customer-form-heading"><h3>{editingQuote ? 'Edit quotation' : 'New quotation'}</h3><button type="button" className="text-button" onClick={() => setQuoteFormOpen(false)}>Cancel</button></div><div className="form-grid">
+                <label>RFQ *<select required value={quoteForm.rfq_id} onChange={e => setQuoteForm({ ...quoteForm, rfq_id: e.target.value })}><option value="">Select RFQ</option>{rfqRows.map(r => <option key={r.id} value={r.id}>{r.reference} — {r.title}</option>)}</select></label>
+                <label>Quotation reference *<input required minLength={2} maxLength={80} value={quoteForm.reference} onChange={e => setQuoteForm({ ...quoteForm, reference: e.target.value })} placeholder="QUO-2026-001" /></label>
+                <label>Revision *<input type="number" min="1" max="1000" value={quoteForm.revision} onChange={e => setQuoteForm({ ...quoteForm, revision: Number(e.target.value) })} /></label>
+                <label>Currency<select value={quoteForm.currency} onChange={e => setQuoteForm({ ...quoteForm, currency: e.target.value as QuotationInput['currency'] })}><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></label>
+                <label>Status<select value={quoteForm.status} onChange={e => setQuoteForm({ ...quoteForm, status: e.target.value as QuoteStatus })}>{quoteStatuses.map(s => <option key={s}>{s}</option>)}</select></label>
+                <label>Valid until<input type="date" value={quoteForm.valid_until || ''} onChange={e => setQuoteForm({ ...quoteForm, valid_until: e.target.value || null })} /></label>
+                <label className="wide-field">Line item description *<input required minLength={2} value={quoteForm.line_items[0]?.description || ''} onChange={e => setQuoteForm({ ...quoteForm, line_items: [{ ...(quoteForm.line_items[0] || emptyQuoteItem), description: e.target.value }] })} /></label>
+                <label>Quantity *<input type="number" min="0.001" step="any" required value={quoteForm.line_items[0]?.quantity ?? 1} onChange={e => setQuoteForm({ ...quoteForm, line_items: [{ ...(quoteForm.line_items[0] || emptyQuoteItem), quantity: Number(e.target.value) }] })} /></label>
+                <label>Material cost / unit<input type="number" min="0" step="0.01" value={quoteForm.line_items[0]?.material_unit_cost ?? 0} onChange={e => setQuoteForm({ ...quoteForm, line_items: [{ ...(quoteForm.line_items[0] || emptyQuoteItem), material_unit_cost: Number(e.target.value) }] })} /></label>
+                <label>Labor cost / unit<input type="number" min="0" step="0.01" value={quoteForm.line_items[0]?.labor_unit_cost ?? 0} onChange={e => setQuoteForm({ ...quoteForm, line_items: [{ ...(quoteForm.line_items[0] || emptyQuoteItem), labor_unit_cost: Number(e.target.value) }] })} /></label>
+                <label>Overhead / unit<input type="number" min="0" step="0.01" value={quoteForm.line_items[0]?.overhead_unit_cost ?? 0} onChange={e => setQuoteForm({ ...quoteForm, line_items: [{ ...(quoteForm.line_items[0] || emptyQuoteItem), overhead_unit_cost: Number(e.target.value) }] })} /></label>
+                <label>Selling price / unit<input type="number" min="0" step="0.01" value={quoteForm.line_items[0]?.unit_selling_price ?? 0} onChange={e => setQuoteForm({ ...quoteForm, line_items: [{ ...(quoteForm.line_items[0] || emptyQuoteItem), unit_selling_price: Number(e.target.value) }] })} /></label>
+                <label className="wide-field">Notes<textarea rows={2} value={quoteForm.notes || ''} onChange={e => setQuoteForm({ ...quoteForm, notes: e.target.value })} /></label>
+              </div><div className="form-actions"><button className="primary-button" type="submit">{editingQuote ? 'Save changes' : 'Create quotation'}</button></div></form>}
+              {quoteBusy ? <div className="empty-state">Loading quotations…</div> : quoteRows.length > 0 && <div className="table-wrap"><table className="data-table"><thead><tr><th>Quote / RFQ</th><th>Customer</th><th>Cost</th><th>Selling price</th><th>Margin</th><th>Status</th><th>Actions</th></tr></thead><tbody>{quoteRows.map(q => <tr key={q.id}><td><strong>{q.reference} · Rev {q.revision}</strong><small>{q.rfq_reference}</small></td><td>{q.customer_name}</td><td>{Number(q.total_cost).toFixed(2)} {q.currency}</td><td>{Number(q.selling_price).toFixed(2)} {q.currency}</td><td>{Number(q.gross_margin_percent).toFixed(2)}%</td><td><span className="rfq-status">{q.status}</span></td><td><div className="row-actions"><button className="text-button" onClick={() => openEditQuote(q)}>Edit</button><button className="text-button danger-text" onClick={() => void deleteQuote(q)}>Delete</button></div></td></tr>)}</tbody></table></div>}
+              {!quoteBusy && quoteRows.length === 0 && rfqRows.length > 0 && !quoteFormOpen && <div className="empty-state"><h2>No quotations yet</h2><p>Create a quote linked to an RFQ to calculate cost and gross margin.</p><button className="secondary-button" onClick={openCreateQuote}>Create first quotation</button></div>}
             </section>
           ) : active === 'Customers' ? (
             <section className="customer-panel">

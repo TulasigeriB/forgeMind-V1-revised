@@ -4,3 +4,5 @@ from app.models.organization import Organization  # noqa: F401
 from app.models.user import User  # noqa: F401
 from app.models.audit_event import AuditEvent  # noqa: F401
 from app.models.customer import Customer  # noqa: F401
+from app.models.rfq import RFQ  # noqa: F401
+from app.models.quotation import Quotation  # noqa: F401

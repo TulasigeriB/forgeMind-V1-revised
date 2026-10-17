@@ -3,7 +3,7 @@ from app.db.base import Base
 
 def test_metadata_contains_expected_tables_and_constraints():
     assert set(Base.metadata.tables) == {
-        "organizations", "users", "audit_events", "customers", "rfqs"
+        "organizations", "users", "audit_events", "customers", "rfqs", "quotations"
     }
     users = Base.metadata.tables["users"]
     assert any(constraint.name == "uq_users_org_email" for constraint in users.constraints)
@@ -19,3 +19,8 @@ def test_metadata_contains_expected_tables_and_constraints():
     assert rfqs.c.organization_id.foreign_keys
     assert rfqs.c.customer_id.foreign_keys
     assert any(constraint.name == "uq_rfqs_org_reference" for constraint in rfqs.constraints)
+
+    quotations = Base.metadata.tables["quotations"]
+    assert quotations.c.organization_id.foreign_keys
+    assert quotations.c.rfq_id.foreign_keys
+    assert any(constraint.name == "uq_quotations_org_ref_revision" for constraint in quotations.constraints)

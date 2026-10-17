@@ -42,3 +42,15 @@ All RFQ endpoints require a bearer token and are scoped to the authenticated org
 - `DELETE /rfqs/{rfq_id}` — delete an RFQ.
 
 Fields: `customer_id`, `reference`, `title`, `quantity` are required; `description`, `due_date`, `status`, and `notes` are optional. Status values: `Draft`, `Received`, `Quoting`, `Submitted`, `Won`, `Lost`, `Cancelled`. Reference numbers are unique per organization. Migration `0003_rfqs` adds RFQ persistence. Customers linked to RFQs cannot be deleted until their RFQs are removed.
+
+## Quotations and costing (Milestone 3)
+
+- `GET /quotations` — list quotations belonging to the authenticated organization.
+- `POST /quotations` — create a quotation linked to an organization-owned RFQ.
+- `GET /quotations/{id}` — retrieve one organization-owned quotation.
+- `PATCH /quotations/{id}` — update a quotation and recalculate cost and margin.
+- `DELETE /quotations/{id}` — delete a quotation.
+
+Quotation payloads contain `rfq_id`, `reference`, `revision`, `currency` (`INR`, `USD`, `EUR`, `GBP`), `status`, optional `valid_until`, `notes`, and one or more `line_items`. Each line item contains description, quantity, unit, material/labor/overhead unit costs, and unit selling price. The API calculates totals using decimal arithmetic and rounds currency amounts to two decimal places. Gross margin is `(selling price - total cost) / selling price * 100`; it is zero when selling price is zero. Reference and revision must be unique within an organization. Every record is organization-scoped and audit events are recorded.
+
+Cost snapshots are persisted on each quotation revision. Creating a new revision should use a new revision number; the API does not silently generate revisions automatically. The current UI exposes one line item per quotation; the API supports multiple line items.
