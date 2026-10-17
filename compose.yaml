@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: forgemind_v1
+      POSTGRES_USER: forgemind
+      POSTGRES_PASSWORD: forgemind_dev_password 
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - forgemind-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forgemind -d forgemind_v1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  forgemind-postgres:
