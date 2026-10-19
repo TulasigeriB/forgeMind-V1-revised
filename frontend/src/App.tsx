@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { api, clearToken, getToken, saveToken } from './api'
-import type { AuthUser, Customer, CustomerInput, RFQ, RFQInput, RFQStatus, Quotation, QuotationInput, QuoteStatus } from './api'
+import type { AuthUser, Customer, CustomerInput, RFQ, RFQInput, RFQStatus, Quotation, QuotationInput, QuoteStatus, ExtractionDocument, ExtractedField } from './api'
 
-type Section = 'Overview' | 'Customers' | 'RFQs' | 'Projects' | 'Engineering' | 'Process planning' | 'Cost estimates' | 'Quotations' | 'Production feedback' | 'Settings'
+type Section = 'Overview' | 'Customers' | 'RFQs' | 'Extraction engine' | 'Projects' | 'Engineering' | 'Process planning' | 'Cost estimates' | 'Quotations' | 'Production feedback' | 'Settings'
 type AuthMode = 'login' | 'register'
 
 const sections: { label: Section; group: string }[] = [
   { label: 'Overview', group: 'WORKSPACE' },
   { label: 'Customers', group: 'WORKSPACE' },
   { label: 'RFQs', group: 'WORKSPACE' },
+  { label: 'Extraction engine', group: 'WORKSPACE' },
   { label: 'Projects', group: 'WORKSPACE' },
   { label: 'Engineering', group: 'ENGINEERING' },
   { label: 'Process planning', group: 'ENGINEERING' },
@@ -23,6 +24,7 @@ const descriptions: Record<Section, string> = {
   Overview: 'A clear view of work in progress, backed by real project records.',
   Customers: 'Manage customer records and commercial contacts.',
   RFQs: 'Capture enquiries, requirements, quantities, and delivery expectations.',
+  'Extraction engine': 'Upload RFQ documents, extract source-linked requirement candidates, and review every value before use.',
   Projects: 'Organize parts, engineering files, reviews, estimates, and quotations.',
   Engineering: 'Upload and review source-linked CAD models and drawing analysis.',
   'Process planning': 'Build reviewable operation sequences from configurable manufacturing rules.',
@@ -70,6 +72,15 @@ function App() {
   const [editingQuote, setEditingQuote] = useState<Quotation | null>(null)
   const [quoteForm, setQuoteForm] = useState<QuotationInput>({ rfq_id: '', reference: '', revision: 1, currency: 'INR', status: 'Draft', valid_until: null, line_items: [{ ...emptyQuoteItem }], notes: '' })
   const [quoteBusy, setQuoteBusy] = useState(false)
+  const [extractionRows, setExtractionRows] = useState<ExtractionDocument[]>([])
+  const [extractionRFQId, setExtractionRFQId] = useState('')
+  const [extractionBusy, setExtractionBusy] = useState(false)
+  const [extractionUploadBusy, setExtractionUploadBusy] = useState(false)
+  const [extractionError, setExtractionError] = useState('')
+  const [extractionNotice, setExtractionNotice] = useState('')
+  const [extractionReviewId, setExtractionReviewId] = useState<string | null>(null)
+  const [extractionReviewFields, setExtractionReviewFields] = useState<ExtractedField[]>([])
+  const [manualCharacteristic, setManualCharacteristic] = useState({ label: '', value: '', source: 'Page 1 · manually located' })
   const groups = [...new Set(sections.map((section) => section.group))]
 
   useEffect(() => {
@@ -92,6 +103,7 @@ function App() {
     if (user && active === 'Customers') void loadCustomers()
     if (user && active === 'RFQs') { void loadCustomers(); void loadRFQs() }
     if (user && active === 'Quotations') { void loadRFQs(); void loadQuotations() }
+    if (user && active === 'Extraction engine') { void loadExtractions(); void loadRFQs() }
   }, [user, active])
 
   async function loadCustomers() {
@@ -127,6 +139,54 @@ function App() {
     if (!window.confirm(`Delete quotation ${q.reference} revision ${q.revision}?`)) return
     try { await api.deleteQuotation(q.id); setQuoteNotice('Quotation deleted.'); await loadQuotations() }
     catch (error) { setQuoteError(error instanceof Error ? error.message : 'Could not delete quotation.') }
+  }
+
+  async function loadExtractions() {
+    setExtractionBusy(true); setExtractionError('')
+    try { setExtractionRows(await api.extractions()) }
+    catch (error) { setExtractionError(error instanceof Error ? error.message : 'Could not load extraction documents.') }
+    finally { setExtractionBusy(false) }
+  }
+  async function uploadExtraction(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setExtractionError(''); setExtractionNotice('')
+    const input = event.currentTarget.elements.namedItem('document') as HTMLInputElement
+    const file = input.files?.[0]
+    if (!extractionRFQId) { setExtractionError('Select the RFQ this document belongs to before uploading.'); return }
+    if (!file) { setExtractionError('Choose a PDF, DOCX, or XLSX file.'); return }
+    setExtractionUploadBusy(true)
+    try { await api.uploadExtraction(file, extractionRFQId); input.value = ''; setExtractionNotice('Document uploaded and extracted. Review all detected fields before using them.'); await loadExtractions() }
+    catch (error) { setExtractionError(error instanceof Error ? error.message : 'Could not extract this document.') }
+    finally { setExtractionUploadBusy(false) }
+  }
+  function openExtractionReview(doc: ExtractionDocument) { setExtractionReviewId(doc.id); setExtractionReviewFields(doc.fields.map(field => ({ ...field }))); setExtractionError(''); setExtractionNotice('') }
+  async function saveExtractionReview() {
+    if (!extractionReviewId) return
+    setExtractionError('')
+    try { await api.reviewExtraction(extractionReviewId, extractionReviewFields.map(({ key, value, review_status, label, source, confidence }) => ({ key, value, review_status, label, source, confidence }))); setExtractionReviewId(null); setExtractionNotice('Review saved. Approved values remain explicitly user-confirmed.'); await loadExtractions() }
+    catch (error) { setExtractionError(error instanceof Error ? error.message : 'Could not save review.') }
+  }
+  async function deleteExtraction(doc: ExtractionDocument) {
+    if (!window.confirm(`Delete uploaded document ${doc.filename}?`)) return
+    try { await api.deleteExtraction(doc.id); setExtractionNotice('Extraction document deleted.'); setExtractionError(''); await loadExtractions() }
+    catch (error) { setExtractionError(error instanceof Error ? error.message : 'Could not delete document.') }
+  }
+
+  function addManualCharacteristic() {
+    const label = manualCharacteristic.label.trim()
+    const value = manualCharacteristic.value.trim()
+    if (!label || !value) { setExtractionError('Enter both a characteristic type and its notation.'); return }
+    setExtractionReviewFields(rows => [...rows, { key: `manual_${Date.now()}`, label, value, source: manualCharacteristic.source, confidence: 0, review_status: 'needs_review' }])
+    setManualCharacteristic({ label: '', value: '', source: 'Page 1 · manually located' })
+    setExtractionError('')
+    setExtractionNotice('Manual characteristic added. Verify its location and interpretation against the drawing.')
+  }
+  function exportInspectionCsv() {
+    const doc = extractionRows.find(item => item.id === extractionReviewId)
+    if (!doc) return
+    const q = (v: unknown) => '"' + String(v ?? '').replace(/"/g, '""') + '"'
+    const rows = [['Balloon ID', 'Characteristic', 'Notation', 'Source location', 'Confidence', 'Review status'], ...extractionReviewFields.map((f, i) => [i + 1, f.label, f.value, f.source, `${Math.round(f.confidence * 100)}%`, f.review_status])]
+    const url = URL.createObjectURL(new Blob([rows.map(row => row.map(q).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }))
+    const a = document.createElement('a'); a.href = url; a.download = 'inspection-characteristics.csv'; a.click(); URL.revokeObjectURL(url)
   }
 
   async function loadRFQs() {
@@ -321,6 +381,21 @@ function App() {
                 </div><div className="form-actions"><button className="primary-button" type="submit" disabled={savingRFQ}>{savingRFQ ? 'Saving…' : editingRFQ ? 'Save changes' : 'Create RFQ'}</button></div></form>}
               {rfqBusy ? <div className="empty-state">Loading RFQs…</div> : rfqRows.length === 0 ? (customerRows.length > 0 && <div className="empty-state"><div className="empty-state-icon">↗</div><h2>No RFQs yet</h2><p>Create an RFQ to begin tracking a customer enquiry.</p><button className="secondary-button" onClick={openCreateRFQ}>Create first RFQ</button></div>) : <div className="table-wrap"><table className="data-table"><thead><tr><th>Reference / requirement</th><th>Customer</th><th>Quantity</th><th>Due date</th><th>Status</th><th>Actions</th></tr></thead><tbody>{rfqRows.map(rfq => <tr key={rfq.id}><td><strong>{rfq.reference}</strong><small>{rfq.title}</small></td><td>{rfq.customer_name}</td><td>{rfq.quantity.toLocaleString()}</td><td>{rfq.due_date || '—'}</td><td><span className={`rfq-status status-${rfq.status.toLowerCase()}`}>{rfq.status}</span></td><td><div className="row-actions"><button className="text-button" onClick={() => openEditRFQ(rfq)}>Edit</button><button className="text-button danger-text" onClick={() => void deleteRFQ(rfq)}>Delete</button></div></td></tr>)}</tbody></table></div>}
             </section>
+          ) : active === 'Extraction engine' ? (
+            <section className="customer-panel">
+              <div className="customer-toolbar"><div><h2>Document extraction & review</h2><p>Supported: text-based PDF, DOCX, and XLSX up to 10 MB. Extraction is deterministic and source-linked; scanned PDF OCR is not enabled.</p></div></div>
+              {extractionError && <div className="error-banner" role="alert">{extractionError}</div>}{extractionNotice && <div className="success-banner" role="status">{extractionNotice}</div>}
+              <form className="customer-form" onSubmit={uploadExtraction}><div className="form-grid"><label>RFQ to attach document to *<select required value={extractionRFQId} onChange={e => setExtractionRFQId(e.target.value)}><option value="">Select RFQ</option>{rfqRows.map(r => <option key={r.id} value={r.id}>{r.reference} — {r.title} ({r.customer_name})</option>)}</select></label><label className="wide-field">RFQ document *<input name="document" type="file" required accept=".pdf,.docx,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></label></div><div className="form-actions"><button className="primary-button" type="submit" disabled={extractionUploadBusy || rfqRows.length === 0}>{extractionUploadBusy ? 'Extracting…' : 'Upload and extract'}</button></div></form>
+              {rfqRows.length === 0 && <div className="empty-state"><p>Create an RFQ first, then upload its drawing or requirement document.</p><button className="secondary-button" onClick={() => setActive('RFQs')}>Open RFQs</button></div>}
+              <div className="empty-state"><p><strong>Review rule:</strong> extracted values are candidates, not verified engineering facts. Confirm, correct, or reject each field before using it in an RFQ or quote.</p></div>
+              {extractionBusy ? <div className="empty-state">Loading documents…</div> : extractionRows.length === 0 ? <div className="empty-state"><h2>No documents processed yet</h2><p>Upload a customer RFQ to extract labeled requirements with source references.</p></div> : <div className="table-wrap"><table className="data-table"><thead><tr><th>Document / RFQ</th><th>Type / size</th><th>Detected fields</th><th>Review status</th><th>Actions</th></tr></thead><tbody>{extractionRows.map(doc => <tr key={doc.id}><td><strong>{doc.filename}</strong><small>RFQ: {doc.rfq_reference || 'Not linked'}</small><small>SHA-256: {doc.content_sha256.slice(0, 12)}…</small></td><td>{doc.file_type.toUpperCase()} · {(doc.file_size_bytes / 1024).toFixed(1)} KB</td><td>{doc.fields.length}</td><td><span className={`rfq-status ${doc.status === 'reviewed' ? 'status-won' : 'status-received'}`}>{doc.status === 'reviewed' ? 'Reviewed' : 'Needs review'}</span></td><td><div className="row-actions"><button className="text-button" onClick={() => openExtractionReview(doc)}>Review</button><button className="text-button danger-text" onClick={() => void deleteExtraction(doc)}>Delete</button></div></td></tr>)}</tbody></table></div>}
+              {extractionReviewId && (() => { const doc = extractionRows.find(item => item.id === extractionReviewId); if (!doc) return null; return <div className="customer-form"><div className="customer-form-heading"><h3>Review: {doc.filename}</h3><button className="text-button" onClick={() => setExtractionReviewId(null)}>Close</button></div>{doc.extraction_warnings.map((warning, i) => <div className="error-banner" key={i}>{warning}</div>)}<div className="inspection-workspace">
+                  <div className="inspection-toolbar"><strong>Inspection characteristics</strong><button type="button" className="secondary-button" onClick={exportInspectionCsv}>Export CSV</button></div>
+                  <p className="muted">Numbered rows are provisional characteristic IDs, not PDF balloons. Verify each source location on the original drawing.</p>
+                  {extractionReviewFields.length === 0 ? <p>No supported labeled fields were detected. Add characteristics manually below.</p> : extractionReviewFields.map((field, index) => <div className="form-grid inspection-characteristic" key={field.key}><label><strong>#{index + 1} · {field.label}</strong><small>Source: {field.source} · confidence {Math.round(field.confidence * 100)}%{field.confidence === 0 ? ' · manual' : ''}</small><input value={field.value} aria-label={`Characteristic ${index + 1} notation`} onChange={e => setExtractionReviewFields(rows => rows.map((row, i) => i === index ? { ...row, value: e.target.value } : row))} /></label><label>Decision<select value={field.review_status} onChange={e => setExtractionReviewFields(rows => rows.map((row, i) => i === index ? { ...row, review_status: e.target.value as ExtractedField['review_status'] } : row))}><option value="needs_review">Needs review</option><option value="approved">Approve</option><option value="rejected">Reject</option></select></label><button type="button" className="text-button danger-text" onClick={() => setExtractionReviewFields(rows => rows.filter((_, i) => i !== index))}>Remove</button></div>)}
+                  <div className="manual-characteristic"><h4>Add missing characteristic</h4><div className="form-grid"><label>Characteristic type<input value={manualCharacteristic.label} onChange={e => setManualCharacteristic(v => ({ ...v, label: e.target.value }))} placeholder="Diameter, GD&T, thread, note…" /></label><label>Exact notation<input value={manualCharacteristic.value} onChange={e => setManualCharacteristic(v => ({ ...v, value: e.target.value }))} placeholder="Copy exact notation from drawing" /></label><label>Source location<input value={manualCharacteristic.source} onChange={e => setManualCharacteristic(v => ({ ...v, source: e.target.value }))} /></label></div><button type="button" className="secondary-button" onClick={addManualCharacteristic}>+ Add characteristic</button></div>
+                </div><details><summary>Extracted source text</summary><pre className="extraction-source-text">{doc.extracted_text}</pre></details><div className="form-actions"><button className="primary-button" onClick={() => void saveExtractionReview()}>Save review</button></div></div> })()}
+            </section>
           ) : active === 'Quotations' ? (
             <section className="customer-panel">
               <div className="customer-toolbar"><div><h2>Quotations & costing</h2><p>Build revisioned quotes from RFQs. Costs and margin are calculated by the API.</p></div><button className="primary-button" onClick={openCreateQuote} disabled={rfqRows.length === 0}>+ New quotation</button></div>
@@ -376,7 +451,7 @@ function App() {
 }
 
 function navSymbol(section: Section): string {
-  const symbols: Record<Section, string> = { Overview: '⌂', Customers: '◎', RFQs: '↗', Projects: '▦', Engineering: '⌁', 'Process planning': '⋈', 'Cost estimates': '∑', Quotations: '▤', 'Production feedback': '↻', Settings: '⚙' }
+  const symbols: Record<Section, string> = { Overview: '⌂', Customers: '◎', RFQs: '↗', 'Extraction engine': '⌕', Projects: '▦', Engineering: '⌁', 'Process planning': '⋈', 'Cost estimates': '∑', Quotations: '▤', 'Production feedback': '↻', Settings: '⚙' }
   return symbols[section]
 }
 

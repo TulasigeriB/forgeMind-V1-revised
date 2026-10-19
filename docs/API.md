@@ -54,3 +54,13 @@ Fields: `customer_id`, `reference`, `title`, `quantity` are required; `descripti
 Quotation payloads contain `rfq_id`, `reference`, `revision`, `currency` (`INR`, `USD`, `EUR`, `GBP`), `status`, optional `valid_until`, `notes`, and one or more `line_items`. Each line item contains description, quantity, unit, material/labor/overhead unit costs, and unit selling price. The API calculates totals using decimal arithmetic and rounds currency amounts to two decimal places. Gross margin is `(selling price - total cost) / selling price * 100`; it is zero when selling price is zero. Reference and revision must be unique within an organization. Every record is organization-scoped and audit events are recorded.
 
 Cost snapshots are persisted on each quotation revision. Creating a new revision should use a new revision number; the API does not silently generate revisions automatically. The current UI exposes one line item per quotation; the API supports multiple line items.
+
+## Extraction engine
+
+- `GET /extractions` — list uploaded extraction records for the signed-in organization.
+- `POST /extractions` — multipart upload using field `file`; accepts PDF, DOCX, and XLSX up to 10 MB. Returns extracted text, source locations, candidate fields, warnings, and `needs_review` status.
+- `GET /extractions/{document_id}` — fetch a source-linked extraction record within the current organization.
+- `PATCH /extractions/{document_id}/review` — submit edited field values and per-field decisions (`needs_review`, `approved`, or `rejected`). The document becomes `reviewed` when every detected field has an explicit decision.
+- `DELETE /extractions/{document_id}` — delete the document and its extracted data.
+
+The initial extraction implementation is deterministic and label-based; it does not use an LLM or OCR. Supported candidate labels include part number, material, dimensions, tolerance, quantity, finish, and delivery requirement. Source references identify PDF pages, DOCX paragraphs/tables, or XLSX sheets/rows. Uploaded originals are stored in the database and isolated by organization. The upload limit is 10 MB, extracted text is capped at 2 million characters, and Office archive expansion is bounded. Scanned PDFs, CAD/drawing interpretation, automatic RFQ creation, and direct costing integration are not enabled in this milestone.

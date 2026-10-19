@@ -68,3 +68,12 @@ Configure `VITE_API_BASE_URL` if the API is not at `http://127.0.0.1:8000`.
 ## Milestone 3 — quotation and costing foundation
 
 Implemented organization-scoped quotation CRUD linked to RFQs, revision identifiers, currency and lifecycle status, line-item inputs, server-side cost totals and gross margin calculations, audit events, uniqueness constraints, and migration `0004_quotations`. The UI provides a quotation list and single-line-item create/edit workflow. API supports multiple line items. Backend tests cover calculated totals and organization isolation. Frontend production build/tests still need to be run on the developer machine for this milestone.
+
+## Extraction Engine milestone (implementation candidate)
+
+- Added authenticated document ingestion for text-based PDF, DOCX, and XLSX files.
+- Extracts selectable text and spreadsheet/table rows with source references; performs deterministic label-based candidate extraction for common RFQ attributes.
+- Candidate fields are explicitly marked `needs_review`; users can edit values and approve/reject each field. No extracted value is silently promoted to an RFQ or quotation.
+- Original file content and extraction results are stored in an organization-scoped database record, with audit events and upload validation.
+- Initial backend suite: 12 tests passed in the build environment.
+- Frontend tests/build still need to be run after dependency installation. OCR, CAD interpretation, and extraction-to-RFQ automation remain out of scope for this initial slice.

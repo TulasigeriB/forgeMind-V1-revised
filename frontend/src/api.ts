@@ -40,8 +40,11 @@ export type QuoteLineItem = { description: string; quantity: number; unit: strin
 export type Quotation = { id: string; organization_id: string; rfq_id: string; rfq_reference: string; customer_name: string; reference: string; revision: number; currency: 'INR' | 'USD' | 'EUR' | 'GBP'; status: QuoteStatus; valid_until: string | null; line_items: QuoteLineItem[]; material_cost: number; labor_cost: number; overhead_cost: number; total_cost: number; selling_price: number; gross_margin_percent: number; notes: string | null; created_at: string; updated_at: string }
 export type QuotationInput = Omit<Quotation, 'id' | 'organization_id' | 'rfq_reference' | 'customer_name' | 'material_cost' | 'labor_cost' | 'overhead_cost' | 'total_cost' | 'selling_price' | 'gross_margin_percent' | 'created_at' | 'updated_at'>
 
-const viteEnv = (import.meta as ImportMeta & { env?: { VITE_API_BASE_URL?: string } }).env
-const API_BASE = (viteEnv?.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
+
+export type ExtractedField = { key: string; label: string; value: string; source: string; confidence: number; review_status: 'needs_review' | 'approved' | 'rejected' }
+export type ExtractionDocument = { id: string; organization_id: string; rfq_id: string | null; rfq_reference: string | null; filename: string; file_type: string; content_sha256: string; file_size_bytes: number; extracted_text: string; source_map: { source: string; text: string }[]; fields: ExtractedField[]; status: 'needs_review' | 'reviewed'; extraction_warnings: string[]; created_at: string; updated_at: string }
+
+const API_BASE = ((import.meta as ImportMeta & { env?: { VITE_API_BASE_URL?: string } }).env?.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
 const TOKEN_KEY = 'forgemind_access_token'
 
 export function getToken(): string | null {
@@ -58,7 +61,7 @@ export function clearToken(): void {
 
 async function request<T>(path: string, options: RequestInit = {}, authenticated = true): Promise<T> {
   const headers = new Headers(options.headers)
-  if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
+  if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
   if (authenticated) {
     const token = getToken()
     if (token) headers.set('Authorization', `Bearer ${token}`)
@@ -72,12 +75,9 @@ async function request<T>(path: string, options: RequestInit = {}, authenticated
   if (!response.ok) {
     let message = `Request failed (${response.status})`
     try {
-      const body = await response.json() as { detail?: unknown }
-      if (typeof body.detail === 'string') {
-        message = body.detail
-      } else if (Array.isArray(body.detail)) {
-        message = (body.detail as Array<{ msg?: string }>).map((item) => item.msg || 'Invalid input').join('; ')
-      }
+      const body = await response.json() as { detail?: string | { msg?: string }[] }
+      if (typeof body.detail === 'string') message = body.detail
+      else if (Array.isArray(body.detail)) message = body.detail.map((item: { msg?: string }) => item.msg || 'Invalid input').join('; ')
     } catch {
       // Use the HTTP status message if the response is not JSON.
     }
@@ -109,4 +109,8 @@ export const api = {
   createQuotation: (input: QuotationInput) => request<Quotation>('/quotations', { method: 'POST', body: JSON.stringify(input) }),
   updateQuotation: (id: string, input: QuotationInput) => request<Quotation>(`/quotations/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(input) }),
   deleteQuotation: (id: string) => request<void>(`/quotations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  extractions: () => request<ExtractionDocument[]>('/extractions'),
+  uploadExtraction: (file: File, rfqId: string) => { const body = new FormData(); body.append('file', file); body.append('rfq_id', rfqId); return request<ExtractionDocument>('/extractions', { method: 'POST', body }) },
+  reviewExtraction: (id: string, fields: (Pick<ExtractedField, 'key' | 'value' | 'review_status'> & { label?: string; source?: string; confidence?: number })[]) => request<ExtractionDocument>(`/extractions/${encodeURIComponent(id)}/review`, { method: 'PATCH', body: JSON.stringify({ fields }) }),
+  deleteExtraction: (id: string) => request<void>(`/extractions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 }

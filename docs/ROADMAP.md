@@ -77,3 +77,8 @@ Acceptance: never generate production-ready code from guessed parameters; valida
 P0: foundation, records/files, access control, traceable STEP analysis, engineer review, deterministic multi-currency costing, quotation snapshots.
 P1 within the expanded MVP: supported PDF extraction/review, configurable process rules, production-feedback capture, and evaluation fixtures.
 P2/future: advanced feature recognition, measured estimation improvements, cloud deployment hardening, and separately approved CAM/NC feasibility.
+
+
+## Extraction engine initial slice
+
+The first implementation supports text-based PDF, DOCX, and XLSX ingestion, source-linked candidate fields, and explicit human review. OCR, drawing understanding, and automatic conversion into RFQs/quotations are subsequent capabilities.

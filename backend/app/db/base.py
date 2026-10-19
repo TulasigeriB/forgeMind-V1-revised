@@ -6,3 +6,5 @@ from app.models.audit_event import AuditEvent  # noqa: F401
 from app.models.customer import Customer  # noqa: F401
 from app.models.rfq import RFQ  # noqa: F401
 from app.models.quotation import Quotation  # noqa: F401
+
+from app.models.extraction import ExtractionDocument  # noqa: F401
