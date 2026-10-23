@@ -1,44 +1,30 @@
-from contextlib import asynccontextmanager
-import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.auth import router as auth_router
-from app.api.customers import router as customers_router
-from app.api.health import router as health_router
-from app.api.rfqs import router as rfqs_router
-from app.api.quotations import router as quotations_router
-from app.api.extractions import router as extractions_router
-from app.core.config import get_settings
-from app.core.logging import configure_logging
-
-settings = get_settings()
-configure_logging(settings.log_level)
-logger = logging.getLogger("forgemind.api")
-
-
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    logger.info("application_start", extra={"environment": settings.app_env})
-    yield
-    logger.info("application_stop")
-
+from backend.app.core.config import settings
 
 app = FastAPI(
-    title="ForgeMind API",
-    version="0.2.0",
-    description="Manufacturing intelligence platform API. Engineering results remain subject to validation and review.",
-    lifespan=lifespan,
+    title=settings.PROJECT_NAME,
+    version="0.1.0",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=["*"], # Tighten in production
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-app.include_router(health_router)
-app.include_router(auth_router)
-app.include_router(customers_router)
-app.include_router(rfqs_router)
-app.include_router(quotations_router)
-app.include_router(extractions_router)
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "version": "0.1.0",
+        "project": settings.PROJECT_NAME
+    }
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to ForgeMind API. Visit /docs for API documentation."}

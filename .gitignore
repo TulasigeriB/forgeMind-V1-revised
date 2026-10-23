@@ -1,7 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
 .env
-.venv/
+.venv
+env/
+venv/
+.pytest_cache/
+
+# Node
 node_modules/
 dist/
-__pycache__/
-.pytest_cache/
-*.py[cod]
+.eslintcache
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
