@@ -1,17 +1,29 @@
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:18
     container_name: forgemind_db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: forgemind
+      POSTGRES_PASSWORD: adminforgemind
+      POSTGRES_DB: forgemind_db
     ports:
       - "5432:5432"
+
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: forgemind_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
       interval: 5s
       timeout: 5s
       retries: 5

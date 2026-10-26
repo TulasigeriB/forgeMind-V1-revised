@@ -20,6 +20,6 @@ CNC Job Shop Quoting System. Modular Monolith.
     - Centralized API client in `services/`.
 
 ## Build & Run Commands
-- **Backend**: `pip install -r backend/requirements.txt` $\rightarrow$ `uvicorn backend.app.main:app --reload`
+- **Backend**: `pip install -r backend/requirements.txt` $\rightarrow$ `uvicorn app.main:app --reload`
 - **DB**: `docker compose up -d`
 - **Migrations**: `alembic upgrade head`

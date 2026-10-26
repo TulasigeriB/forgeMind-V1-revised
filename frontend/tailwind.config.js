@@ -8,10 +8,20 @@ export default {
     extend: {
       colors: {
         brand: {
-          dark: '#1a1a1a',
-          accent: '#3b82f6',
-          muted: '#6b7280',
-        }
+          dark: '#101c2b',
+          accent: '#f08a3c',
+          muted: '#778392',
+        },
+        industrial: {
+          navy: '#101c2b',
+          charcoal: '#253243',
+          steel: '#778392',
+          orange: '#f08a3c',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'Segoe UI', 'Arial', 'sans-serif'],
+        mono: ['Consolas', 'monospace'],
       }
     },
   },

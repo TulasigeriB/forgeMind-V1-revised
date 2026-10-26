@@ -20,3 +20,9 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+/drawings
+/uploads
+
+cmd.txt
+dummy.txt
+review_diff.txt
