@@ -1,3 +1,4 @@
+
 from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
@@ -17,6 +18,10 @@ class DrawingAnalysis(BaseModel):
     quality_document_templates: dict[str, Any] = Field(default_factory=dict)
     metadata_and_notes: list[dict[str, Any]] = Field(default_factory=list)
     review_flags: list[dict[str, Any]] = Field(default_factory=list)
+
+    # Persisted normalized engineering feature representation.
+    # Older analysis records may not contain this field.
+    normalized_feature_model: dict[str, Any] | None = Field(default=None, exclude=True)
 
     model_config = ConfigDict(extra="forbid")
 
@@ -50,7 +55,9 @@ class AnalysisReviewDecision(BaseModel):
                 self.corrected_units,
             )
         ):
-            raise ValueError("A corrected decision must include at least one corrected field")
+            raise ValueError(
+                "A corrected decision must include at least one corrected field"
+            )
         return self
 
 

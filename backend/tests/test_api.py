@@ -2,12 +2,16 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from app.main import app
 from app.db.session import Base, get_db
 from app.core.security import create_access_token
 from app.core.config import settings
+from app.models.engineering_file import EngineeringFile
+from app.models.project import Project as ProjectModel
+from app.models.operation import ManufacturingOperation
+from app.models.quote import Quote
 
 # --- Configuration ---
 # In production, these would come from a .env.test file
@@ -17,6 +21,15 @@ engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # --- Fixtures ---
+@pytest.fixture(autouse=True)
+def enable_auth_bypass_for_legacy_tests(monkeypatch):
+    """Legacy API behavior tests opt into the auth bypass explicitly.
+
+    Security-boundary tests override this setting to False and exercise real JWT checks.
+    """
+    monkeypatch.setattr(settings, "AUTH_DISABLED_FOR_TESTING", True)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
     """Initialize the test database schema once per session."""
@@ -93,6 +106,24 @@ class TestSecurityBoundaries:
         )
         assert response.status_code == 401
 
+    @pytest.mark.parametrize("path", [
+        "/api/v1/customers",
+        "/api/v1/projects",
+        "/api/v1/templates",
+    ])
+    def test_data_routes_reject_missing_token(self, client, monkeypatch, path):
+        monkeypatch.setattr(settings, "AUTH_DISABLED_FOR_TESTING", False)
+        response = client.get(path)
+        assert response.status_code == 401
+
+    def test_customer_creation_rejects_missing_token(self, client, monkeypatch):
+        monkeypatch.setattr(settings, "AUTH_DISABLED_FOR_TESTING", False)
+        response = client.post(
+            "/api/v1/customers",
+            json={"name": "Unauthorized", "contact_email": "unauthorized@example.com"},
+        )
+        assert response.status_code == 401
+
     def test_protected_route_without_token_in_testing_mode(self, client, monkeypatch):
         monkeypatch.setattr(settings, "AUTH_DISABLED_FOR_TESTING", True)
 
@@ -157,6 +188,109 @@ class TestCustomerAPI:
         assert response.status_code == 200
         assert response.json()["name"] == "After Update"
         assert response.json()["address"] == "1 Factory Road"
+
+class TestAnalysisReviewPersistence:
+    def test_corrected_and_rejected_review_survives_reload_without_mutating_source(self, client, db_session, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        customer = client.post(
+            "/api/v1/customers",
+            json={"name": "Review Persistence Customer", "contact_email": "review-persist@example.com"},
+            headers=headers,
+        ).json()
+        rfq = client.post(
+            "/api/v1/rfqs",
+            json={"customer_id": customer["id"], "quantity": 1},
+            headers=headers,
+        ).json()
+        project = client.post(
+            "/api/v1/projects",
+            json={"rfq_id": rfq["id"], "part_number": "REVIEW-001"},
+            headers=headers,
+        ).json()
+        project_uuid = UUID(project["id"])
+        source_analysis = {
+            "part_identifier": "REVIEW-001",
+            "units": "mm",
+            "manufacturing_operations": {
+                "turning": [{"feature": "diameter", "dimensions": [
+                    {"callout": "Ø10", "value": 10.0, "units": "mm"},
+                    {"callout": "Ø99", "value": 99.0, "units": "mm"},
+                ]}],
+                "milling": [],
+            },
+            "precision_fits": [], "geometric_tolerances": [], "form_features": [],
+            "critical_operations": [], "inspection_checklist": [],
+            "quality_document_templates": {}, "metadata_and_notes": [], "review_flags": [],
+        }
+        db_project = db_session.get(ProjectModel, project_uuid)
+        db_project.analysis_data = source_analysis
+        db_project.status = "analysis_ready"
+        db_session.commit()
+
+        response = client.put(
+            f"/api/v1/projects/{project_uuid}/analysis/review",
+            json={"status": "changes_requested", "decisions": [
+                {"target_id": "manufacturing_operations.turning.0.dimensions.0", "decision": "corrected", "corrected_value": 10.5, "corrected_callout": "Ø10.5"},
+                {"target_id": "manufacturing_operations.turning.0.dimensions.1", "decision": "rejected"},
+            ]},
+            headers=headers,
+        )
+        assert response.status_code == 200
+
+        db_session.expire_all()
+        reloaded = db_session.get(ProjectModel, project_uuid)
+        assert reloaded.analysis_review["status"] == "changes_requested"
+        decisions = {item["target_id"]: item for item in reloaded.analysis_review["decisions"]}
+        assert decisions["manufacturing_operations.turning.0.dimensions.0"]["corrected_value"] == 10.5
+        assert decisions["manufacturing_operations.turning.0.dimensions.1"]["decision"] == "rejected"
+        # The raw extraction remains immutable; route generation applies review decisions to a copy.
+        assert reloaded.analysis_data["manufacturing_operations"]["turning"][0]["dimensions"][0]["value"] == 10.0
+        assert len(reloaded.analysis_data["manufacturing_operations"]["turning"][0]["dimensions"]) == 2
+
+
+class TestProjectDeletion:
+    def test_delete_project_removes_database_records_and_physical_drawing(self, client, db_session, auth_token, tmp_path, monkeypatch):
+        from app.api import files as files_api
+
+        monkeypatch.setattr(settings, "UPLOAD_DIR", str(tmp_path))
+        monkeypatch.setattr(files_api, "UPLOAD_DIR", tmp_path)
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        customer = client.post(
+            "/api/v1/customers",
+            json={"name": "Delete Test Customer", "contact_email": "delete-test@example.com"},
+            headers=headers,
+        ).json()
+        rfq = client.post(
+            "/api/v1/rfqs",
+            json={"customer_id": customer["id"], "quantity": 2},
+            headers=headers,
+        ).json()
+        project = client.post(
+            "/api/v1/projects",
+            json={"rfq_id": rfq["id"], "part_number": "DELETE-001"},
+            headers=headers,
+        ).json()
+
+        stored_file = tmp_path / "delete-me.pdf"
+        stored_file.write_bytes(b"%PDF-1.4 test")
+        project_uuid = UUID(project["id"])
+        engineering_file = EngineeringFile(
+            project_id=project_uuid, file_type="PDF", storage_path=str(stored_file), status="uploaded"
+        )
+        db_session.add(engineering_file)
+        db_session.commit()
+        file_id = engineering_file.id
+        project_id = project["id"]
+
+        response = client.delete(f"/api/v1/projects/{project_id}", headers=headers)
+
+        assert response.status_code == 204
+        assert not stored_file.exists()
+        assert db_session.get(ProjectModel, project_uuid) is None
+        assert db_session.get(EngineeringFile, file_id) is None
+        assert db_session.query(ManufacturingOperation).filter_by(project_id=project_uuid).count() == 0
+        assert db_session.query(Quote).filter_by(project_id=project_uuid).count() == 0
+
 
 class TestProjectWorkflow:
     def test_full_project_lifecycle(self, client, auth_token):

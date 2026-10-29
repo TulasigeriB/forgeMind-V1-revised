@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "FORGEMIND_DEV_SECRET_KEY_CHANGE_IN_PROD"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 # 24 hours
-    AUTH_DISABLED_FOR_TESTING: bool = True
+    AUTH_DISABLED_FOR_TESTING: bool = False
     TESSERACT_CMD: str = "tesseract"
 
     UPLOAD_DIR: str = str(BACKEND_DIR / "uploads")

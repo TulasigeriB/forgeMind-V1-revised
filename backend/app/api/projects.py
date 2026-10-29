@@ -31,9 +31,13 @@ from app.models.quote import Quote
 from app.schemas.quote import QuoteResponse
 from app.schemas.operation import ManufacturingOperation as OperationSchema
 from uuid import UUID
+import logging
+from app.services.drawing_intelligence import DrawingIntelligenceService
 # ... other imports ...
 
-router = APIRouter()
+logger = logging.getLogger(__name__)
+
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 def _quote_response(quote: Quote) -> dict:
@@ -336,9 +340,48 @@ def delete_project(project_id: UUID, db: Session = Depends(get_db), current_user
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    # Cascade deletion of related entities (files, operations, etc.)
-    # SQLAlchemy relationships should handle this if cascade="all, delete-orphan" is set,
-    # otherwise we handle it manually here.
-    db.delete(project)
-    db.commit()
+    # Resolve the stored files before mutating the database so invalid paths are
+    # detected while the project and its metadata still exist.
+    stored_paths = []
+    for engineering_file in project.files:
+        try:
+            stored_paths.append(
+                DrawingIntelligenceService._resolve_storage_path(engineering_file.storage_path)
+            )
+        except FileNotFoundError:
+            # Missing files are already absent; database cleanup should continue.
+            continue
+        except ValueError as error:
+            raise HTTPException(
+                status_code=500,
+                detail="A stored drawing path is invalid; project deletion was cancelled",
+            ) from error
+
+    # Remove physical files first. If any removal fails, preserve database rows so
+    # the user can retry instead of silently leaving an orphaned file reference.
+    removed_paths = []
+    try:
+        for path in stored_paths:
+            path.unlink(missing_ok=True)
+            removed_paths.append(path)
+    except OSError as error:
+        logger.exception("Failed to remove drawing file during project deletion %s", project_id)
+        raise HTTPException(
+            status_code=500,
+            detail="A stored drawing file could not be deleted; project deletion was cancelled",
+        ) from error
+
+    try:
+        db.delete(project)
+        db.commit()
+    except Exception:
+        db.rollback()
+        # Filesystem changes cannot be rolled back transactionally. Log this case
+        # explicitly; restoration requires a separate durable deletion workflow.
+        logger.exception(
+            "Database deletion failed after project files were removed for project %s; files=%s",
+            project_id,
+            [str(path) for path in removed_paths],
+        )
+        raise
     return None

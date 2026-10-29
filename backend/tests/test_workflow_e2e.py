@@ -18,6 +18,8 @@ from app.api import projects as projects_api
 
 @pytest.fixture
 def workflow_database(tmp_path, monkeypatch):
+    # These workflow tests focus on manufacturing behavior, not JWT authentication.
+    monkeypatch.setattr(settings, "AUTH_DISABLED_FOR_TESTING", True)
     database_path = tmp_path / "workflow.sqlite"
     engine = create_engine(f"sqlite:///{database_path}")
     Base.metadata.create_all(bind=engine)
@@ -195,9 +197,24 @@ def test_customer_to_approved_quote_workflow(tmp_path, workflow_database):
         quote = quote_response.json()
         assert quote["order_quantity"] == 10
         assert quote["total_cost"] == pytest.approx(
-            sum(item["unit_cost"] * 10 for item in quote["breakdown"])
+            sum(item["extended_cost"] for item in quote["breakdown"])
         )
-        assert client.get(f"/api/v1/projects/{project_id}/quote").json()["id"] == quote["id"]
+        assert quote["total_time_minutes"] == pytest.approx(
+            sum(item["extended_time_minutes"] for item in quote["breakdown"])
+        )
+        assert all(item["quantity"] == quote["order_quantity"] for item in quote["breakdown"])
+        assert all(
+            item["extended_cost"] == pytest.approx(item["unit_cost"] * item["quantity"])
+            for item in quote["breakdown"]
+        )
+        assert all(
+            item["extended_time_minutes"] == pytest.approx(item["unit_time_minutes"] * item["quantity"])
+            for item in quote["breakdown"]
+        )
+        persisted_quote = client.get(f"/api/v1/projects/{project_id}/quote").json()
+        assert persisted_quote["id"] == quote["id"]
+        assert persisted_quote["total_cost"] == pytest.approx(quote["total_cost"])
+        assert persisted_quote["breakdown"] == quote["breakdown"]
 
 
 def test_socket_head_screw_workflow_uses_process_cost_baseline(tmp_path, workflow_database):

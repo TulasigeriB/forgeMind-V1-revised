@@ -152,7 +152,9 @@ class DrawingIntelligenceService:
 
     @staticmethod
     def _resolve_storage_path(storage_path: str) -> Path:
-        stored_path = Path(storage_path).expanduser()
+        # Normalize Windows separators as legacy paths may have been persisted on
+        # Windows and later read by a Linux deployment (or vice versa).
+        stored_path = Path(storage_path.replace("\\", "/")).expanduser()
         if stored_path.is_absolute():
             return stored_path
 

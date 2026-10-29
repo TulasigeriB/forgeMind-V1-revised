@@ -19,7 +19,7 @@ from app.services.drawing_intelligence import DrawingIntelligenceService
 from app.services.feature_normalizer import FeatureNormalizer
 from app.services.route_service import ManufacturingRouteService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 UPLOAD_DIR = Path(settings.UPLOAD_DIR).resolve()
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 logger = logging.getLogger(__name__)
@@ -123,7 +123,6 @@ async def analyze_uploaded_file(
             project_file.status = "analyzed"
         ManufacturingRouteService.invalidate(db, project_id)
         persisted_analysis = analysis.model_dump(mode="json")
-        persisted_analysis["normalized_feature_model"] = normalized_feature_model
         project.analysis_data = persisted_analysis
         project.analysis_review = None
         project.route_review = None
