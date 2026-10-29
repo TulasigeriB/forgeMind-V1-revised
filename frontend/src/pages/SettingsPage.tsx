@@ -18,7 +18,7 @@ function SettingsPage() {
         <div><div className="eyebrow">WORKSPACE CONFIGURATION</div><h1>Settings</h1><p>Manage API access for protected workspace actions.</p></div>
       </div>
       <section className="panel settings-panel">
-        <div className="form-section-heading"><span className="settings-icon"><KeyRound size={18} /></span><div><h2>API access token</h2><p>Used to authorize engineering file uploads.</p></div></div>
+        <div className="form-section-heading"><span className="settings-icon"><KeyRound size={18} /></span><div><h2>API access token</h2><p>Used to authorize file uploads and protected workspace records.</p></div></div>
         <label className="form-field settings-token">
           <span>Bearer token</span>
           <input type="password" autoComplete="off" value={token} onChange={(event) => { setToken(event.target.value); setSaved(false) }} placeholder="Paste an access token" />

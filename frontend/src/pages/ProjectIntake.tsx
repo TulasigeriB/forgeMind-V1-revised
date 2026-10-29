@@ -3,20 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check, FilePlus2, FileText, LoaderCircle, Trash2, UploadCloud } from 'lucide-react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
-import { ProjectService, type Project, type ProjectPriority } from '../services/api'
+import { getApiErrorMessage, ProjectService, type DrawingAnalysis, type Project, type ProjectPriority } from '../services/api'
 import { useActiveProject } from '../store/ActiveProjectContext'
 
 const acceptedExtensions = ['.pdf']
 
 function getRequestError(error: unknown) {
-  if (axios.isAxiosError(error)) {
-    const detail = error.response?.data?.detail
-    if (error.response?.status === 401) return 'Your API access token is missing or invalid. Add a valid token in Settings.'
-    if (typeof detail === 'string') return detail
-    if (!error.response) return 'Could not reach the ForgeMind API. Check that the backend is running.'
-    return `The request failed with HTTP ${error.response.status}.`
-  }
-  return 'Project intake failed. Please try again.'
+  return getApiErrorMessage(error, 'Project intake failed. Please try again.')
 }
 
 function ProjectIntake() {
@@ -87,13 +80,13 @@ function ProjectIntake() {
       const project = projectResponse.data
       setCreatedProject(project)
 
+      let analysis: DrawingAnalysis | null = null
       for (const file of files) {
-        await ProjectService.uploadFile(project.id, file)
+        analysis = (await ProjectService.analyzeFile(project.id, file)).data
       }
 
-      await ProjectService.analyzeProject(project.id)
       setActiveProject(project)
-      navigate(`/project/${project.id}`)
+      navigate(`/project/${project.id}`, { state: { analysis } })
     } catch (requestError) {
       setError(getRequestError(requestError))
     } finally {
@@ -188,14 +181,14 @@ function ProjectIntake() {
             <div className="analysis-icon"><UploadCloud size={19} /></div>
             <div className="eyebrow">NEXT STEP</div>
             <h2>Drawing analysis</h2>
-            <p>PDF files will be uploaded for drawing extraction and queued for engineer review.</p>
+            <p>PDF drawings are saved to the project and analyzed immediately for engineer review.</p>
             <ul className="analysis-checklist">
               <li><Check size={14} /> Create or match customer</li>
               <li><Check size={14} /> Register project and RFQ</li>
-              <li><Check size={14} /> Upload PDF drawings and queue analysis</li>
+              <li><Check size={14} /> Analyze and save PDF drawings</li>
             </ul>
             <button type="submit" className="button button-primary button-wide" disabled={submitting || files.length === 0}>
-              {submitting ? <><LoaderCircle className="spin" size={17} /> Creating project…</> : <>Create &amp; start AI analysis <ArrowLeft className="arrow-forward" size={16} /></>}
+              {submitting ? <><LoaderCircle className="spin" size={17} /> Creating project…</> : <>Create &amp; analyze drawings <ArrowLeft className="arrow-forward" size={16} /></>}
             </button>
             {files.length === 0 && <small className="button-hint">Add at least one PDF drawing to continue.</small>}
           </div>

@@ -66,6 +66,13 @@ class TestHealthCheck:
         assert response.json() == {"status": "healthy", "version": "0.1.0"}
 
 class TestSecurityBoundaries:
+    def test_customer_directory_requires_token(self, client, monkeypatch):
+        monkeypatch.setattr(settings, "AUTH_DISABLED_FOR_TESTING", False)
+
+        response = client.get("/api/v1/customers")
+
+        assert response.status_code == 401
+
     def test_protected_route_no_token(self, client, monkeypatch):
         """Ensure protected routes reject requests without a token."""
         monkeypatch.setattr(settings, "AUTH_DISABLED_FOR_TESTING", False)
@@ -110,6 +117,19 @@ class TestCustomerAPI:
         # Verify UUID format (roughly)
         assert len(data["id"]) == 36
 
+    def test_list_customers(self, client, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        client.post(
+            "/api/v1/customers",
+            json={"name": "Directory Customer", "contact_email": "directory@example.com"},
+            headers=headers,
+        )
+
+        response = client.get("/api/v1/customers", headers=headers)
+
+        assert response.status_code == 200
+        assert response.json()[0]["name"] == "Directory Customer"
+
     def test_create_customer_invalid_email(self, client, auth_token):
         payload = {
             "name": "Bad Email Corp",
@@ -119,6 +139,24 @@ class TestCustomerAPI:
         headers = {"Authorization": f"Bearer {auth_token}"}
         response = client.post("/api/v1/customers", json=payload, headers=headers)
         assert response.status_code == 422 # Validation Error
+
+    def test_update_customer(self, client, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        created = client.post(
+            "/api/v1/customers",
+            json={"name": "Before Update", "contact_email": "before@example.com"},
+            headers=headers,
+        )
+
+        response = client.patch(
+            f"/api/v1/customers/{created.json()['id']}",
+            json={"name": "After Update", "address": "1 Factory Road"},
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        assert response.json()["name"] == "After Update"
+        assert response.json()["address"] == "1 Factory Road"
 
 class TestProjectWorkflow:
     def test_full_project_lifecycle(self, client, auth_token):
@@ -141,6 +179,7 @@ class TestProjectWorkflow:
                                 json={"rfq_id": rfq_id, "part_number": "PART-001"},
                                 headers=headers)
         project_id = proj_resp.json()["id"]
+        assert proj_resp.json()["customer_name"] == "CNC Ltd"
 
         # 4. Get Project
         get_resp = client.get(f"/api/v1/projects/{project_id}", headers=headers)
@@ -180,3 +219,84 @@ class TestFileAPI:
 
         assert response.status_code == 415
         assert "Only PDF drawings are currently supported" in response.json()["detail"]
+
+    def test_analyze_upload_persists_analysis_and_serves_file(self, client, auth_token, monkeypatch):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        customer = client.post(
+            "/api/v1/customers",
+            json={"name": "Drawing Customer", "contact_email": "drawing@example.com"},
+            headers=headers,
+        ).json()
+        rfq = client.post(
+            "/api/v1/rfqs",
+            json={"customer_id": customer["id"], "quantity": 1},
+            headers=headers,
+        ).json()
+        project = client.post(
+            "/api/v1/projects",
+            json={"rfq_id": rfq["id"], "part_number": "DRAW-001", "material_spec": "Steel"},
+            headers=headers,
+        ).json()
+        expected_analysis = {
+            "part_identifier": "DRAW-001",
+            "units": "mm",
+            "manufacturing_operations": {"turning": [], "milling": []},
+            "precision_fits": [],
+            "geometric_tolerances": [],
+            "form_features": [],
+            "critical_operations": [],
+            "inspection_checklist": [],
+            "quality_document_templates": {},
+            "metadata_and_notes": [],
+            "review_flags": [],
+        }
+        monkeypatch.setattr(
+            "app.api.files.DrawingIntelligenceService.analyze_files",
+            lambda **kwargs: expected_analysis,
+        )
+
+        response = client.post(
+            "/api/v1/files/analyze",
+            data={"project_id": project["id"]},
+            files={"file": ("drawing.pdf", b"%PDF-1.4 test drawing", "application/pdf")},
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        assert response.json() == expected_analysis
+        project_analysis = client.get(f"/api/v1/projects/{project['id']}/analysis", headers=headers)
+        assert project_analysis.json()["analysis"] == expected_analysis
+        files = client.get(f"/api/v1/projects/{project['id']}/files", headers=headers).json()
+        assert len(files) == 1
+        assert files[0]["status"] == "analyzed"
+        content = client.get(f"/api/v1/files/{files[0]['id']}/content", headers=headers)
+        assert content.status_code == 200
+        assert content.content == b"%PDF-1.4 test drawing"
+
+    def test_analyze_upload_rejects_invalid_pdf(self, client, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        customer = client.post(
+            "/api/v1/customers",
+            json={"name": "Invalid Drawing Customer", "contact_email": "invalid-drawing@example.com"},
+            headers=headers,
+        ).json()
+        rfq = client.post(
+            "/api/v1/rfqs",
+            json={"customer_id": customer["id"], "quantity": 1},
+            headers=headers,
+        ).json()
+        project = client.post(
+            "/api/v1/projects",
+            json={"rfq_id": rfq["id"], "part_number": "DRAW-002"},
+            headers=headers,
+        ).json()
+
+        response = client.post(
+            "/api/v1/files/analyze",
+            data={"project_id": project["id"]},
+            files={"file": ("drawing.pdf", b"not a pdf", "application/pdf")},
+            headers=headers,
+        )
+
+        assert response.status_code == 422
+        assert response.json()["detail"] == "The uploaded file is not a valid PDF"

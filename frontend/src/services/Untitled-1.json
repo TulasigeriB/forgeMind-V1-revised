@@ -1,0 +1,1316 @@
+{
+  "part_identifier": "AS-WER-12",
+  "units": "mm",
+  "manufacturing_operations": {
+    "milling": [
+      {
+        "page": 1,
+        "feature": "slots",
+        "quantity": 14,
+        "confidence": 0.65,
+        "dimensions": [],
+        "page_width": 1191.1199951171875,
+        "page_height": 841.9199829101562,
+        "bounding_box": [
+          396.07,
+          670.92,
+          536.74,
+          682.47
+        ],
+        "nearest_vector_line": "page-1-vector-671",
+        "needs_engineer_confirmation": true
+      }
+    ],
+    "turning": [
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 6,
+            "symbol": "LINEAR",
+            "callout": "6.00",
+            "confidence": 0.76,
+            "bounding_box": {
+              "x0": 641.16,
+              "x1": 656.56,
+              "y0": 70.75,
+              "y1": 82.3,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-1",
+            "nearest_vector_line": "page-1-vector-714",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.89
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 0.6,
+            "symbol": "LINEAR",
+            "callout": "0.60",
+            "confidence": 0.75,
+            "bounding_box": {
+              "x0": 591.72,
+              "x1": 607.12,
+              "y0": 82.51,
+              "y1": 94.06,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-3",
+            "nearest_vector_line": "page-1-vector-719",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.87
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 0.5,
+            "symbol": "LINEAR",
+            "callout": "0.50",
+            "confidence": 0.76,
+            "bounding_box": {
+              "x0": 683.9,
+              "x1": 699.3,
+              "y0": 93.79,
+              "y1": 105.34,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-4",
+            "nearest_vector_line": "page-1-vector-709",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.89
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 3.4,
+            "symbol": "LINEAR",
+            "callout": "3.40",
+            "confidence": 0.76,
+            "bounding_box": {
+              "x0": 580.68,
+              "x1": 596.08,
+              "y0": 103.63,
+              "y1": 115.18,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-5",
+            "nearest_vector_line": "page-1-vector-747",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.88
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 2,
+            "symbol": "LINEAR",
+            "callout": "2.00",
+            "confidence": 0.76,
+            "bounding_box": {
+              "x0": 683.9,
+              "x1": 699.3,
+              "y0": 112.51,
+              "y1": 124.06,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-6",
+            "nearest_vector_line": "page-1-vector-736",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.89
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 34.5,
+            "symbol": "LINEAR",
+            "callout": "34.50",
+            "confidence": 0.77,
+            "bounding_box": {
+              "x0": 325.03,
+              "x1": 345.22,
+              "y0": 130.06,
+              "y1": 141.61,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-7",
+            "nearest_vector_line": "page-1-vector-939",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.92
+          }
+        ]
+      },
+      {
+        "feature": "bore diameter",
+        "dimensions": [
+          {
+            "type": "diameter",
+            "units": "mm",
+            "value": 5,
+            "symbol": "Ø",
+            "callout": "H7 +0.012 5.000 0.000",
+            "confidence": 0.73,
+            "bounding_box": {
+              "x0": 726.62,
+              "x1": 787.85,
+              "y0": 131.5,
+              "y1": 153.85,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "dimension_line_ref": "page-1-baseline-8",
+            "nearest_vector_line": "page-1-vector-752",
+            "needs_engineer_confirmation": false,
+            "vector_alignment_confidence": 0.8
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 30,
+            "symbol": "LINEAR",
+            "callout": "30.00",
+            "confidence": 0.77,
+            "bounding_box": {
+              "x0": 330.79,
+              "x1": 350.98,
+              "y0": 167.5,
+              "y1": 179.05,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-9",
+            "nearest_vector_line": "page-1-vector-943",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.92
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 4.6,
+            "symbol": "LINEAR",
+            "callout": "4.60",
+            "confidence": 0.76,
+            "bounding_box": {
+              "x0": 563.64,
+              "x1": 579.04,
+              "y0": 174.22,
+              "y1": 185.77,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-10",
+            "nearest_vector_line": "page-1-vector-743",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.89
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 27.57,
+            "symbol": "LINEAR",
+            "callout": "27.57",
+            "confidence": 0.76,
+            "bounding_box": {
+              "x0": 789.29,
+              "x1": 809.48,
+              "y0": 223.44,
+              "y1": 234.99,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-11",
+            "nearest_vector_line": "page-1-vector-730",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.89
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 14,
+            "symbol": "LINEAR",
+            "callout": "14.00",
+            "confidence": 0.75,
+            "bounding_box": {
+              "x0": 743.42,
+              "x1": 763.61,
+              "y0": 233.76,
+              "y1": 245.31,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-12",
+            "nearest_vector_line": "page-1-vector-726",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.87
+          }
+        ]
+      },
+      {
+        "feature": "diameter",
+        "dimensions": [
+          {
+            "type": "diameter",
+            "units": "mm",
+            "value": 32,
+            "symbol": "Ø",
+            "callout": "+0.033 32.000 n6 +0.017",
+            "confidence": 0.75,
+            "bounding_box": {
+              "x0": 511.54,
+              "x1": 574.47,
+              "y0": 228.24,
+              "y1": 250.59,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "dimension_line_ref": "page-1-baseline-12",
+            "nearest_vector_line": "page-1-vector-722",
+            "needs_engineer_confirmation": false,
+            "vector_alignment_confidence": 0.84
+          }
+        ]
+      },
+      {
+        "feature": "diameter",
+        "dimensions": [
+          {
+            "type": "diameter",
+            "units": "mm",
+            "value": 32,
+            "symbol": "Ø",
+            "callout": "+0.033 32.000 n6 +0.017",
+            "confidence": 0.74,
+            "bounding_box": {
+              "x0": 317.59,
+              "x1": 380.5,
+              "y0": 304.35,
+              "y1": 326.46,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "dimension_line_ref": "page-1-baseline-15",
+            "nearest_vector_line": "page-1-vector-947",
+            "needs_engineer_confirmation": false,
+            "vector_alignment_confidence": 0.84
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 10.5,
+            "symbol": "LINEAR",
+            "callout": "10.50",
+            "confidence": 0.76,
+            "bounding_box": {
+              "x0": 631.08,
+              "x1": 651.27,
+              "y0": 353.07,
+              "y1": 364.62,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-16",
+            "nearest_vector_line": "page-1-vector-741",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.89
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 5.2,
+            "symbol": "LINEAR",
+            "callout": "5.20",
+            "confidence": 0.76,
+            "bounding_box": {
+              "x0": 182.45,
+              "x1": 197.85,
+              "y0": 412.85,
+              "y1": 424.4,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-17",
+            "nearest_vector_line": "page-1-vector-767",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.89
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 1.75,
+            "symbol": "LINEAR",
+            "callout": "1.75",
+            "confidence": 0.74,
+            "bounding_box": {
+              "x0": 590.28,
+              "x1": 605.68,
+              "y0": 432.77,
+              "y1": 444.32,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-18",
+            "nearest_vector_line": "page-1-vector-779",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.82
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 1.3,
+            "symbol": "LINEAR",
+            "callout": "1.30",
+            "confidence": 0.73,
+            "bounding_box": {
+              "x0": 590.04,
+              "x1": 605.44,
+              "y0": 519.67,
+              "y1": 531.22,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-19",
+            "nearest_vector_line": "page-1-vector-783",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.81
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 6.5,
+            "symbol": "LINEAR",
+            "callout": "6.50",
+            "confidence": 0.76,
+            "bounding_box": {
+              "x0": 85.94,
+              "x1": 101.35,
+              "y0": 556.18,
+              "y1": 567.73,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-20",
+            "nearest_vector_line": "page-1-vector-763",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.88
+          }
+        ]
+      },
+      {
+        "feature": "unclassified linear dimension",
+        "dimensions": [
+          {
+            "type": "linear",
+            "units": "mm",
+            "value": 9.97,
+            "symbol": "LINEAR",
+            "callout": "9.97",
+            "confidence": 0.77,
+            "bounding_box": {
+              "x0": 42.24,
+              "x1": 57.64,
+              "y0": 556.42,
+              "y1": 567.97,
+              "page": 1,
+              "page_width": 1191.1199951171875,
+              "page_height": 841.9199829101562
+            },
+            "semantic_source": "unresolved",
+            "dimension_line_ref": "page-1-baseline-20",
+            "nearest_vector_line": "page-1-vector-770",
+            "needs_engineer_confirmation": true,
+            "vector_alignment_confidence": 0.92
+          }
+        ]
+      }
+    ]
+  },
+  "precision_fits": [
+    {
+      "fit": "H7",
+      "callout": "H7 +0.012 5.000 0.000",
+      "feature": "bore diameter",
+      "confidence": 0.73,
+      "nominal_size": "5.000 mm",
+      "lower_deviation": "+0.000",
+      "upper_deviation": "+0.012",
+      "needs_engineer_confirmation": false
+    },
+    {
+      "fit": "n6",
+      "callout": "+0.033 32.000 n6 +0.017",
+      "feature": "diameter",
+      "confidence": 0.75,
+      "nominal_size": "32.000 mm",
+      "lower_deviation": "+0.017",
+      "upper_deviation": "+0.033",
+      "needs_engineer_confirmation": false
+    }
+  ],
+  "geometric_tolerances": [],
+  "form_features": [
+    {
+      "page": 1,
+      "callout": "= 25.71° =",
+      "feature": "profile angle",
+      "confidence": 0.88,
+      "dimensions": [
+        {
+          "type": "angle",
+          "units": "mm",
+          "value": 25.71,
+          "symbol": "°",
+          "callout": "= 25.71° =",
+          "confidence": 0.88,
+          "bounding_box": {
+            "x0": 194.93,
+            "x1": 233.36,
+            "y0": 72.67,
+            "y1": 84.22,
+            "page": 1,
+            "page_width": 1191.1199951171875,
+            "page_height": 841.9199829101562
+          },
+          "dimension_line_ref": "page-1-baseline-1",
+          "nearest_vector_line": "page-1-vector-653",
+          "needs_engineer_confirmation": false,
+          "vector_alignment_confidence": 0.65
+        }
+      ],
+      "page_width": 1191.1199951171875,
+      "page_height": 841.9199829101562,
+      "bounding_box": [
+        194.93,
+        72.67,
+        233.36,
+        84.22
+      ],
+      "nearest_vector_line": "page-1-vector-653",
+      "needs_engineer_confirmation": false
+    },
+    {
+      "page": 1,
+      "units": "mm",
+      "value": 0.5,
+      "callout": "R0.50",
+      "feature": "fillet or relief radius",
+      "confidence": 0.9,
+      "page_width": 1191.1199951171875,
+      "page_height": 841.9199829101562,
+      "bounding_box": [
+        554.52,
+        282,
+        576.14,
+        293.55
+      ],
+      "nearest_vector_line": "page-1-vector-757",
+      "needs_engineer_confirmation": false
+    },
+    {
+      "page": 1,
+      "callout": "60°",
+      "feature": "profile angle",
+      "confidence": 0.9,
+      "dimensions": [
+        {
+          "type": "angle",
+          "units": "mm",
+          "value": 60,
+          "symbol": "°",
+          "callout": "60°",
+          "confidence": 0.9,
+          "bounding_box": {
+            "x0": 690.14,
+            "x1": 702.81,
+            "y0": 301.47,
+            "y1": 313.02,
+            "page": 1,
+            "page_width": 1191.1199951171875,
+            "page_height": 841.9199829101562
+          },
+          "dimension_line_ref": "page-1-baseline-14",
+          "nearest_vector_line": "page-1-vector-570",
+          "needs_engineer_confirmation": false,
+          "vector_alignment_confidence": 0.88
+        }
+      ],
+      "page_width": 1191.1199951171875,
+      "page_height": 841.9199829101562,
+      "bounding_box": [
+        690.14,
+        301.47,
+        702.81,
+        313.02
+      ],
+      "nearest_vector_line": "page-1-vector-570",
+      "needs_engineer_confirmation": false
+    },
+    {
+      "page": 1,
+      "size": 0.1,
+      "units": "mm",
+      "callout": "0.10 X 45°",
+      "feature": "chamfer",
+      "confidence": 0.9,
+      "page_width": 1191.1199951171875,
+      "page_height": 841.9199829101562,
+      "bounding_box": [
+        542.28,
+        344.91,
+        580.63,
+        356.46
+      ],
+      "angle_degrees": 45,
+      "nearest_vector_line": "page-1-vector-760",
+      "needs_engineer_confirmation": false
+    },
+    {
+      "page": 1,
+      "size": 0.1,
+      "units": "mm",
+      "callout": "0.10 X 45°",
+      "feature": "chamfer",
+      "confidence": 0.9,
+      "page_width": 1191.1199951171875,
+      "page_height": 841.9199829101562,
+      "bounding_box": [
+        298.39,
+        533.83,
+        336.5,
+        545.38
+      ],
+      "angle_degrees": 45,
+      "nearest_vector_line": "page-1-vector-951",
+      "needs_engineer_confirmation": false
+    },
+    {
+      "page": 1,
+      "callout": "25.71°",
+      "feature": "profile angle",
+      "confidence": 0.85,
+      "dimensions": [
+        {
+          "type": "angle",
+          "units": "mm",
+          "value": 25.71,
+          "symbol": "°",
+          "callout": "25.71°",
+          "confidence": 0.85,
+          "bounding_box": {
+            "x0": 567.72,
+            "x1": 591.9,
+            "y0": 568.66,
+            "y1": 580.21,
+            "page": 1,
+            "page_width": 1191.1199951171875,
+            "page_height": 841.9199829101562
+          },
+          "dimension_line_ref": "page-1-baseline-22",
+          "nearest_vector_line": "page-1-vector-675",
+          "needs_engineer_confirmation": false,
+          "vector_alignment_confidence": 0.57
+        }
+      ],
+      "page_width": 1191.1199951171875,
+      "page_height": 841.9199829101562,
+      "bounding_box": [
+        567.72,
+        568.66,
+        591.9,
+        580.21
+      ],
+      "nearest_vector_line": "page-1-vector-675",
+      "needs_engineer_confirmation": false
+    },
+    {
+      "page": 1,
+      "callout": "ANGULAR ±1/2°",
+      "feature": "profile angle",
+      "confidence": 0.89,
+      "dimensions": [
+        {
+          "type": "angle",
+          "units": "mm",
+          "value": 2,
+          "symbol": "°",
+          "callout": "ANGULAR ±1/2°",
+          "confidence": 0.89,
+          "bounding_box": {
+            "x0": 658.7,
+            "x1": 726.62,
+            "y0": 724.57,
+            "y1": 734.36,
+            "page": 1,
+            "page_width": 1191.1199951171875,
+            "page_height": 841.9199829101562
+          },
+          "dimension_line_ref": "page-1-baseline-23",
+          "nearest_vector_line": "page-1-vector-16",
+          "needs_engineer_confirmation": false,
+          "vector_alignment_confidence": 0.69
+        }
+      ],
+      "page_width": 1191.1199951171875,
+      "page_height": 841.9199829101562,
+      "bounding_box": [
+        658.7,
+        724.57,
+        726.62,
+        734.36
+      ],
+      "nearest_vector_line": "page-1-vector-16",
+      "needs_engineer_confirmation": false
+    },
+    {
+      "page": 1,
+      "callout": "ANGULAR =±1/2°",
+      "feature": "profile angle",
+      "confidence": 0.9,
+      "dimensions": [
+        {
+          "type": "angle",
+          "units": "mm",
+          "value": 2,
+          "symbol": "°",
+          "callout": "ANGULAR =±1/2°",
+          "confidence": 0.9,
+          "bounding_box": {
+            "x0": 741.26,
+            "x1": 815.43,
+            "y0": 726.49,
+            "y1": 735.56,
+            "page": 1,
+            "page_width": 1191.1199951171875,
+            "page_height": 841.9199829101562
+          },
+          "dimension_line_ref": "page-1-baseline-23",
+          "nearest_vector_line": "page-1-vector-29",
+          "needs_engineer_confirmation": false,
+          "vector_alignment_confidence": 0.71
+        }
+      ],
+      "page_width": 1191.1199951171875,
+      "page_height": 841.9199829101562,
+      "bounding_box": [
+        741.26,
+        726.49,
+        815.43,
+        735.56
+      ],
+      "nearest_vector_line": "page-1-vector-29",
+      "needs_engineer_confirmation": false
+    }
+  ],
+  "critical_operations": [
+    {
+      "reason": "H7 +0.012 5.000 0.000",
+      "operation": "Precision machining and fit verification",
+      "needs_engineer_confirmation": false
+    },
+    {
+      "reason": "+0.033 32.000 n6 +0.017",
+      "operation": "Precision machining and fit verification",
+      "needs_engineer_confirmation": false
+    }
+  ],
+  "inspection_checklist": [
+    {
+      "status": "planned",
+      "category": "dimensional",
+      "requirement": "Verify fit/tolerance: H7 +0.012 5.000 0.000",
+      "source_callout": "H7 +0.012 5.000 0.000",
+      "measurement_method": "Engineer-defined calibrated measurement"
+    },
+    {
+      "status": "planned",
+      "category": "dimensional",
+      "requirement": "Verify fit/tolerance: +0.033 32.000 n6 +0.017",
+      "source_callout": "+0.033 32.000 n6 +0.017",
+      "measurement_method": "Engineer-defined calibrated measurement"
+    }
+  ],
+  "quality_document_templates": {
+    "ppap": {
+      "status": "draft",
+      "sections": [
+        "Design and drawing revision records",
+        "Process flow and manufacturing route",
+        "Process risk analysis",
+        "Control and inspection plan",
+        "Dimensional and material test results",
+        "Measurement equipment and calibration evidence",
+        "Nonconformance and corrective-action records",
+        "Customer approval and submission decision"
+      ],
+      "requires_engineer_review": true
+    },
+    "first_article_inspection": {
+      "items": [
+        {
+          "status": "planned",
+          "category": "dimensional",
+          "requirement": "Verify fit/tolerance: H7 +0.012 5.000 0.000",
+          "source_callout": "H7 +0.012 5.000 0.000",
+          "measurement_method": "Engineer-defined calibrated measurement"
+        },
+        {
+          "status": "planned",
+          "category": "dimensional",
+          "requirement": "Verify fit/tolerance: +0.033 32.000 n6 +0.017",
+          "source_callout": "+0.033 32.000 n6 +0.017",
+          "measurement_method": "Engineer-defined calibrated measurement"
+        }
+      ],
+      "status": "draft",
+      "intended_use": "R&D / first production article"
+    }
+  },
+  "metadata_and_notes": [
+    {
+      "notes": [
+        "NOTES: UNLESS OTHERWISE SPECIFIED",
+        "2. BREAK ALL SHARP CORNERS WITH 0.1X45",
+        "3. UNDIMENSIONED FEATURES SHALL CONFORM TO THE 3D CAD MODEL"
+      ],
+      "units": "mm",
+      "material": "AL-6061",
+      "supplier": null,
+      "confidence": 0.92,
+      "page_count": 1,
+      "source_files": [
+        "36673ffa-afae-409f-9a13-2b6fb0339005.pdf"
+      ],
+      "component_type": null,
+      "heat_treatments": [],
+      "part_identifier": "AS-WER-12",
+      "surface_treatments": [],
+      "drawing_description": "DE BRACKET",
+      "surface_specifications": [],
+      "component_classification": {
+        "shape": "flat",
+        "evidence": {
+          "material": "AL-6061",
+          "description": "DE BRACKET",
+          "component_type": null
+        },
+        "confidence": 0.82,
+        "stock_form": "casting",
+        "material_family": "unclassified",
+        "needs_engineer_confirmation": true
+      },
+      "general_tolerance_callouts": [
+        "XX.X",
+        "ANGULAR ±1/2°",
+        "ANGULAR =±1/2°"
+      ],
+      "needs_engineer_confirmation": false
+    }
+  ],
+  "review_flags": [
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 6.00",
+      "confidence": 0.76,
+      "bounding_box": [
+        641.16,
+        70.75,
+        656.56,
+        82.3
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 6.00",
+      "confidence": 0.76,
+      "bounding_box": [
+        641.16,
+        70.75,
+        656.56,
+        82.3
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 0.60",
+      "confidence": 0.75,
+      "bounding_box": [
+        591.72,
+        82.51,
+        607.12,
+        94.06
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 0.60",
+      "confidence": 0.75,
+      "bounding_box": [
+        591.72,
+        82.51,
+        607.12,
+        94.06
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 0.50",
+      "confidence": 0.76,
+      "bounding_box": [
+        683.9,
+        93.79,
+        699.3,
+        105.34
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 0.50",
+      "confidence": 0.76,
+      "bounding_box": [
+        683.9,
+        93.79,
+        699.3,
+        105.34
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 3.40",
+      "confidence": 0.76,
+      "bounding_box": [
+        580.68,
+        103.63,
+        596.08,
+        115.18
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 3.40",
+      "confidence": 0.76,
+      "bounding_box": [
+        580.68,
+        103.63,
+        596.08,
+        115.18
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 2.00",
+      "confidence": 0.76,
+      "bounding_box": [
+        683.9,
+        112.51,
+        699.3,
+        124.06
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 2.00",
+      "confidence": 0.76,
+      "bounding_box": [
+        683.9,
+        112.51,
+        699.3,
+        124.06
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 34.50",
+      "confidence": 0.77,
+      "bounding_box": [
+        325.03,
+        130.06,
+        345.22,
+        141.61
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 34.50",
+      "confidence": 0.77,
+      "bounding_box": [
+        325.03,
+        130.06,
+        345.22,
+        141.61
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 30.00",
+      "confidence": 0.77,
+      "bounding_box": [
+        330.79,
+        167.5,
+        350.98,
+        179.05
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 30.00",
+      "confidence": 0.77,
+      "bounding_box": [
+        330.79,
+        167.5,
+        350.98,
+        179.05
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 4.60",
+      "confidence": 0.76,
+      "bounding_box": [
+        563.64,
+        174.22,
+        579.04,
+        185.77
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 4.60",
+      "confidence": 0.76,
+      "bounding_box": [
+        563.64,
+        174.22,
+        579.04,
+        185.77
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 27.57",
+      "confidence": 0.76,
+      "bounding_box": [
+        789.29,
+        223.44,
+        809.48,
+        234.99
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 27.57",
+      "confidence": 0.76,
+      "bounding_box": [
+        789.29,
+        223.44,
+        809.48,
+        234.99
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 14.00",
+      "confidence": 0.75,
+      "bounding_box": [
+        743.42,
+        233.76,
+        763.61,
+        245.31
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 14.00",
+      "confidence": 0.75,
+      "bounding_box": [
+        743.42,
+        233.76,
+        763.61,
+        245.31
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 10.50",
+      "confidence": 0.76,
+      "bounding_box": [
+        631.08,
+        353.07,
+        651.27,
+        364.62
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 10.50",
+      "confidence": 0.76,
+      "bounding_box": [
+        631.08,
+        353.07,
+        651.27,
+        364.62
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 5.20",
+      "confidence": 0.76,
+      "bounding_box": [
+        182.45,
+        412.85,
+        197.85,
+        424.4
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 5.20",
+      "confidence": 0.76,
+      "bounding_box": [
+        182.45,
+        412.85,
+        197.85,
+        424.4
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 1.75",
+      "confidence": 0.74,
+      "bounding_box": [
+        590.28,
+        432.77,
+        605.68,
+        444.32
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 1.75",
+      "confidence": 0.74,
+      "bounding_box": [
+        590.28,
+        432.77,
+        605.68,
+        444.32
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 1.30",
+      "confidence": 0.73,
+      "bounding_box": [
+        590.04,
+        519.67,
+        605.44,
+        531.22
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 1.30",
+      "confidence": 0.73,
+      "bounding_box": [
+        590.04,
+        519.67,
+        605.44,
+        531.22
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 6.50",
+      "confidence": 0.76,
+      "bounding_box": [
+        85.94,
+        556.18,
+        101.35,
+        567.73
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 6.50",
+      "confidence": 0.76,
+      "bounding_box": [
+        85.94,
+        556.18,
+        101.35,
+        567.73
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Linear dimension feature is unclassified: 9.97",
+      "confidence": 0.77,
+      "bounding_box": [
+        42.24,
+        556.42,
+        57.64,
+        567.97
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "Dimension association is uncertain: 9.97",
+      "confidence": 0.77,
+      "bounding_box": [
+        42.24,
+        556.42,
+        57.64,
+        567.97
+      ],
+      "needs_engineer_confirmation": true
+    },
+    {
+      "page": 1,
+      "issue": "General tolerance-block text was detected; confirm its scope and decimal-place rules against the drawing.",
+      "confidence": 0.55,
+      "bounding_box": [
+        658.7,
+        677.02,
+        677.77,
+        685.85
+      ],
+      "needs_engineer_confirmation": true
+    }
+  ]
+}

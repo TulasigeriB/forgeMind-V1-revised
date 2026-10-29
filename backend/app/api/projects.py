@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.services.project_service import ProjectService
 from app.services.costing_service import CostingService
-from app.schemas.customer import Customer, CustomerCreate
+from app.schemas.customer import Customer, CustomerCreate, CustomerUpdate
 from app.schemas.rfq import RFQ, RFQCreate
 from app.schemas.project import Project, ProjectCreate
-from app.schemas.feature import ManufacturingFeature as FeatureSchema, CostTemplateCreate
+from app.schemas.feature import ManufacturingFeature as FeatureSchema, CostTemplate, CostTemplateCreate
 from app.schemas.analysis import (
     ProcessPlanReviewUpdate,
     ProjectAnalysisResponse,
@@ -17,7 +17,7 @@ from app.schemas.analysis import (
     ProjectAnalysisReview,
     ProjectAnalysisReviewUpdate,
 )
-from app.models.feature import ManufacturingFeature
+from app.models.feature import ManufacturingFeature, CostTemplate as CostTemplateModel
 from app.models.operation import ManufacturingOperation
 from app.models.engineering_file import EngineeringFile
 from app.core.celery_app import celery_app
@@ -25,6 +25,8 @@ from app.core.security import get_current_user
 from app.services.analysis_review import get_review_targets
 from app.services.route_service import ManufacturingRouteService
 from app.models.project import Project as ProjectModel
+from app.models.customer import Customer as CustomerModel
+from app.models.rfq import RFQ as RFQModel
 from app.models.quote import Quote
 from app.schemas.quote import QuoteResponse
 from app.schemas.operation import ManufacturingOperation as OperationSchema
@@ -55,12 +57,34 @@ def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
     except ProjectService.CustomerAlreadyExistsError as error:
         raise HTTPException(status_code=409, detail="A customer with this email already exists") from error
 
+@router.get("/customers", response_model=list[Customer])
+def list_customers(
+    db: Session = Depends(get_db),
+    current_user: str = Depends(get_current_user),
+):
+    return ProjectService.get_all_customers(db)
+
 @router.get("/customers/by-email", response_model=Customer)
 def get_customer_by_email(email: EmailStr, db: Session = Depends(get_db)):
     customer = ProjectService.get_customer_by_email(db, email)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     return customer
+
+@router.patch("/customers/{customer_id}", response_model=Customer)
+def update_customer(
+    customer_id: UUID,
+    customer: CustomerUpdate,
+    db: Session = Depends(get_db),
+    current_user: str = Depends(get_current_user),
+):
+    try:
+        updated_customer = ProjectService.update_customer(db, customer_id, customer)
+    except ProjectService.CustomerAlreadyExistsError as error:
+        raise HTTPException(status_code=409, detail="A customer with this email already exists") from error
+    if updated_customer is None:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return updated_customer
 
 @router.post("/rfqs", response_model=RFQ)
 def create_rfq(rfq: RFQCreate, db: Session = Depends(get_db)):
@@ -69,6 +93,22 @@ def create_rfq(rfq: RFQCreate, db: Session = Depends(get_db)):
 @router.post("/projects", response_model=Project)
 def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
     return ProjectService.create_project(db, project)
+
+@router.post("/templates", response_model=CostTemplate)
+def create_cost_template(template: CostTemplateCreate, db: Session = Depends(get_db)):
+    existing = db.query(CostTemplateModel).filter(CostTemplateModel.feature_type == template.feature_type).first()
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="A cost template for this feature type already exists")
+
+    db_template = CostTemplateModel(**template.model_dump())
+    db.add(db_template)
+    db.commit()
+    db.refresh(db_template)
+    return db_template
+
+@router.get("/templates", response_model=list[CostTemplate])
+def list_cost_templates(db: Session = Depends(get_db)):
+    return db.query(CostTemplateModel).order_by(CostTemplateModel.feature_type).all()
 
 @router.get("/projects", response_model=list[Project])
 def list_projects(db: Session = Depends(get_db)):
@@ -275,6 +315,30 @@ def get_project_quote(project_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No quote has been generated")
     return _quote_response(quote)
 
-@router.post("/templates")
-def create_cost_template(template: CostTemplateCreate, db: Session = Depends(get_db)):
-    return CostingService.create_template(db, template)
+@router.delete("/customers/{customer_id}", status_code=204)
+def delete_customer(customer_id: UUID, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    customer = db.get(CustomerModel, customer_id)
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    # Check if customer has linked RFQs/Projects
+    rfqs = db.query(RFQModel).filter(RFQModel.customer_id == customer_id).all()
+    if rfqs:
+        raise HTTPException(status_code=409, detail="Cannot delete customer with active RFQs/Projects")
+
+    db.delete(customer)
+    db.commit()
+    return None
+
+@router.delete("/projects/{project_id}", status_code=204)
+def delete_project(project_id: UUID, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    project = db.get(ProjectModel, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Cascade deletion of related entities (files, operations, etc.)
+    # SQLAlchemy relationships should handle this if cascade="all, delete-orphan" is set,
+    # otherwise we handle it manually here.
+    db.delete(project)
+    db.commit()
+    return None

@@ -17,7 +17,13 @@ class Project(Base):
     route_review = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     rfq = relationship("RFQ", back_populates="projects")
-    files = relationship("EngineeringFile", back_populates="project")
-    features = relationship("ManufacturingFeature", back_populates="project")
-    operations = relationship("ManufacturingOperation", back_populates="project")
-    quotes = relationship("Quote", back_populates="project")
+    files = relationship("EngineeringFile", back_populates="project", cascade="all, delete-orphan")
+    features = relationship("ManufacturingFeature", back_populates="project", cascade="all, delete-orphan")
+    operations = relationship("ManufacturingOperation", back_populates="project", cascade="all, delete-orphan")
+    quotes = relationship("Quote", back_populates="project", cascade="all, delete-orphan")
+
+    @property
+    def customer_name(self) -> str | None:
+        if self.rfq is None or self.rfq.customer is None:
+            return None
+        return self.rfq.customer.name

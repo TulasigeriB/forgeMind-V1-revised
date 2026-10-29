@@ -7,50 +7,80 @@ import {
   Factory,
   LayoutDashboard,
   Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
+  UserCircle,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useActiveProject } from '../store/ActiveProjectContext'
+import ToastViewport from './ToastViewport'
 
 const navigation = [
-  { label: 'Dashboard', to: '/', icon: LayoutDashboard, end: true },
-  { label: 'Project Explorer', to: '/projects', icon: Boxes },
-  { label: 'Customer CRM', to: '/customers', icon: CircleUserRound },
-  { label: 'DNA Templates', to: '/templates', icon: Factory },
+  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
+  { label: 'Projects', to: '/projects', icon: Boxes },
+  { label: 'Customers', to: '/customers', icon: CircleUserRound },
   { label: 'Settings', to: '/settings', icon: Settings },
 ]
 
 function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation()
   const { activeProject } = useActiveProject()
-  const isProjectView = location.pathname.startsWith('/project/')
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const isIntake = location.pathname === '/projects/new'
+  const isProjectView = location.pathname.startsWith('/project/') || (!isIntake && /^\/projects\/[^/]+$/.test(location.pathname))
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
       <aside className="sidebar">
-        <NavLink to="/" className="brand-lockup" aria-label="ForgeMind home">
-          <span className="brand-mark"><Activity size={19} strokeWidth={2.5} /></span>
-          <span>FORGEMIND<span className="brand-ai"> AI</span></span>
-        </NavLink>
+        <div className="sidebar-header">
+          <NavLink to="/dashboard" className="brand-lockup" aria-label="ForgeMind home">
+            <span className="brand-mark"><Activity size={19} strokeWidth={2.5} /></span>
+            {!isCollapsed && <span>FORGEMIND<span className="brand-ai"> AI</span></span>}
+          </NavLink>
+          <button
+            className="sidebar-toggle"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+        </div>
 
-        <div className="sidebar-section-label">WORKSPACE</div>
+        {!isCollapsed && (
+          <div className="workspace-switcher">
+            <span className="workspace-mark"><Factory size={15} strokeWidth={2.2} /></span>
+            <span><strong>ForgeMind shop</strong><small>Manufacturing workspace</small></span>
+            <ChevronRight size={14} />
+          </div>
+        )}
+
+        {!isCollapsed && <div className="sidebar-section-label">WORKSPACE</div>}
         <nav className="sidebar-nav" aria-label="Main navigation">
-          {navigation.map(({ label, to, icon: Icon, end }) => (
+          {navigation.map(({ label, to, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
-              end={end}
               className={({ isActive }) => `nav-link${isActive ? ' nav-link-active' : ''}`}
+              title={isCollapsed ? label : undefined}
             >
               <Icon size={18} strokeWidth={1.8} />
-              <span>{label}</span>
+              {!isCollapsed && <span>{label}</span>}
             </NavLink>
           ))}
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="system-status"><span className="status-light" /> SYSTEM OPERATIONAL</div>
-          <div className="sidebar-version">FORGEMIND PLATFORM <span>v0.1</span></div>
+          <NavLink to="/profile" className="nav-link profile-link" title={isCollapsed ? 'Profile' : undefined}>
+            <UserCircle size={18} strokeWidth={1.8} />
+            {!isCollapsed && <span>User Profile</span>}
+          </NavLink>
+
+          {!isCollapsed && (
+            <>
+              <div className="system-status"><span className="status-light" /> SYSTEM OPERATIONAL</div>
+              <div className="sidebar-version">FORGEMIND PLATFORM <span>v0.1</span></div>
+            </>
+          )}
         </div>
       </aside>
 
@@ -65,11 +95,11 @@ function AppLayout({ children }: { children: ReactNode }) {
                 <ChevronRight size={14} />
                 <span>{activeProject?.part_number ?? 'Project'}</span>
                 <ChevronRight size={14} />
-                <span className="breadcrumb-current">Costing Analysis</span>
+                <span className="breadcrumb-current">Project workspace</span>
               </>
             ) : (
               <span className="breadcrumb-current">
-                {isIntake ? 'New Project' : navigation.find((item) => item.to === location.pathname)?.label ?? 'Workspace'}
+                {isIntake ? 'New project' : navigation.find((item) => item.to === location.pathname)?.label ?? (location.pathname === '/dashboard' ? 'Dashboard' : 'Workspace')}
               </span>
             )}
           </div>
@@ -80,6 +110,7 @@ function AppLayout({ children }: { children: ReactNode }) {
         </header>
         <main className="page-content">{children}</main>
       </div>
+      <ToastViewport />
     </div>
   )
 }

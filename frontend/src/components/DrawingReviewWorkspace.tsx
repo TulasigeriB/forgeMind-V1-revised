@@ -366,22 +366,19 @@ function DrawingReviewWorkspace({
             {targets.map((target) => {
               const draft = drafts[target.id]
               return (
-                <>
-                  <span key={target.id} className="inspection-target-index">{targets.indexOf(target) + 1}</span>
+                <div key={target.id} className={`inspection-target${target.id === selectedTargetId ? ' inspection-target-active' : ''}`}
+                  onClick={() => {
+                    setSelectedTargetId(target.id)
+                    if (target.page) setPageNumber(target.page)
+                  }}>
+                  <span className="inspection-target-index">{targets.indexOf(target) + 1}</span>
                   <button
-                    type="button"
-                    key={target.id}
-                    className={`inspection-target${target.id === selectedTargetId ? ' inspection-target-active' : ''}`}
-                    onClick={() => {
-                      setSelectedTargetId(target.id)
-                      if (target.page) setPageNumber(target.page)
-                    }}
-                  >
+                    type="button" className="inspection-target-button">
                     <strong>{target.callout || target.feature}</strong>
                     <span>{target.label}</span>
                     <small>{Math.round(target.confidence * 100)}% confidence · {draft?.decision ?? 'not reviewed'}</small>
                   </button>
-                </>
+                </div>
               )
             })}
             {!targets.length && <p className="analysis-muted">No reviewable callouts were extracted.</p>}

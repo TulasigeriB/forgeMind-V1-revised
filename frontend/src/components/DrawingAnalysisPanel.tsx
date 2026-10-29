@@ -64,9 +64,7 @@ function DrawingAnalysisPanel({ analysis }: { analysis: DrawingAnalysis | null }
         <div><span>Component / stock</span><strong>{String(metadata?.component_type ?? classification?.shape ?? 'Unclassified')} · {String(classification?.stock_form ?? 'stock unspecified')}</strong></div>
       </div>
       <div className="analysis-sections">
-        <section><h3>Turning dimensions</h3><DimensionList features={analysis.manufacturing_operations.turning} /></section>
-        <section><h3>Milling dimensions &amp; patterns</h3><DimensionList features={analysis.manufacturing_operations.milling} /></section>
-        <section>
+        {/* <section>
           <h3>Precision fits &amp; tolerances</h3>
           {analysis.precision_fits.length === 0 ? <p className="analysis-muted">No fit callouts extracted.</p> : (
             <div className="analysis-callout-list">
@@ -89,7 +87,7 @@ function DrawingAnalysisPanel({ analysis }: { analysis: DrawingAnalysis | null }
               ))}
             </div>
           )}
-        </section>
+        </section> */}
         <section>
           <h3>Form &amp; surface features</h3>
           {analysis.form_features.length === 0 ? <p className="analysis-muted">No form callouts extracted.</p> : (

@@ -9,10 +9,14 @@ JWT authentication is required when `AUTH_DISABLED_FOR_TESTING` is false. Set it
 | Step | Method | Endpoint | Notes |
 | --- | --- | --- | --- |
 | Create customer | `POST` | `/customers` | Duplicate email returns `409`. |
+| List customers | `GET` | `/customers` | JWT-protected; returns customer directory records ordered by name. |
 | Find customer | `GET` | `/customers/by-email?email=...` | Returns `404` when not found. |
+| Update customer | `PATCH` | `/customers/{customer_id}` | Accepts one or more of `name`, `contact_email`, and `address`; duplicate email returns `409`. |
+| Delete customer | `DELETE` | `/customers/{customer_id}` | Returns `409` while the customer has linked RFQs. |
 | Create RFQ | `POST` | `/rfqs` | Includes order quantity and priority. |
 | Create project | `POST` | `/projects` | Associates the project with an RFQ. |
 | Upload drawing | `POST` | `/upload?project_id=...` | PDF only; unsupported file types return `415`. |
+| Upload and analyze drawing | `POST` | `/files/analyze` | Multipart form fields `file` and `project_id`; saves the PDF and analysis synchronously, returning a `DrawingAnalysis` payload. PDF files are limited to 25 MB. |
 | List drawings | `GET` | `/projects/{project_id}/files` | Lists project drawings. |
 | Read drawing | `GET` | `/files/{file_id}/content` | Serves the uploaded PDF for inspection. |
 | Start analysis | `POST` | `/projects/{project_id}/analyze` | Queues extraction through Celery. |
@@ -23,7 +27,9 @@ JWT authentication is required when `AUTH_DISABLED_FOR_TESTING` is false. Set it
 | Create quote | `POST` | `/projects/{project_id}/quote` | Requires approved analysis and route. |
 | Get latest quote | `GET` | `/projects/{project_id}/quote` | Returns the persisted estimate. |
 
-Additional endpoints include `GET /projects`, `GET /projects/{project_id}`, feature and operation listings, `POST /templates`, and `GET /health`.
+Additional endpoints include `GET /projects`, `GET /projects/{project_id}`, feature and operation listings, `POST /templates`, and `GET /health`. Project responses include `customer_name`, resolved through the associated RFQ, for project-list display.
+
+The integrated frontend uses `/files/analyze` for intake and workspace uploads. Each successful request re-analyzes the project's non-failed PDFs, persists the returned analysis on the project, and marks those files as analyzed. A validation or extraction failure returns a descriptive `4xx` response; extraction failures retain the uploaded file with a `failed` status for troubleshooting.
 
 ## Analysis and quote contract
 

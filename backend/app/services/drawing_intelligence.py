@@ -122,7 +122,14 @@ class DrawingIntelligenceService:
                 })
                 continue
 
-            extracted_lines, extracted_vectors, pages = cls._extract_pdf(path)
+            try:
+                extracted_lines, extracted_vectors, pages = cls._extract_pdf(path)
+            except (ValueError, RuntimeError, fitz.FileDataError) as exc:
+                raise ValueError(
+                    f"{path.name} is not a valid PDF drawing or could not be parsed for analysis. "
+                    "Upload a searchable PDF file with valid drawing content."
+                ) from exc
+
             lines.extend(extracted_lines)
             vector_lines.extend(extracted_vectors)
             page_count += pages
